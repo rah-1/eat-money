@@ -6,10 +6,15 @@ from kivy.uix.image import Image
 from kivy.uix.label import Label
 from kivy.uix.textinput import TextInput
 from kivy.uix.button import Button
+import csv
 
 
 class MyApp(App):
     def build(self):
+        # here: reads in old data upon build start
+        self._food_list = []
+        self.read_old_data()
+
         self.first_click = True
 
         today = date.today().strftime("%B %d, %Y")
@@ -20,7 +25,7 @@ class MyApp(App):
         self.window.size_hint = (0.6, 0.7)
         self.window.pos_hint = {"center_x": 0.5, "center_y": 0.5}
 
-        # logo widget (todo)
+        # todo: logo widget
         # self.window.add_widget(Image(source="filename.png"))
 
         # label widget
@@ -68,6 +73,11 @@ class MyApp(App):
 
         return self.window
 
+    # todo: this is a function to read in the csv file to load old data
+    def read_old_data(self):
+        pass
+
+
     def bigbuttonpress(self, instance):
         if self.first_click:
             self.button.text = "SUBMIT COST"
@@ -77,7 +87,7 @@ class MyApp(App):
             self.first_click = True
         self.user.text = ""
 
-
+    # todo: when stats button is preessed (popup???)
     def viewstatsbutton(self, instance):
         pass
 
