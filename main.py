@@ -1,6 +1,5 @@
 from datetime import date
 from food import Food
-import kivy
 from kivy.app import App
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.image import Image
@@ -12,6 +11,7 @@ import csv
 
 class MyApp(App):
     def build(self):
+        # these store the current name/cost based on user entry
         self._curr_name = ""
         self._curr_cost = ""
 
@@ -21,22 +21,27 @@ class MyApp(App):
         self.read_old_data()
 
         # boolean variable to switch between food and cost entry
+        # its basically an easy way to track which entry field is
+        # being used at the moment
         self._first_click = False
 
         self._today = date.today()
         # print("Today's date:", self._today.strftime("%B %d, %Y"))
 
         # layout convention: grid
+        # this means that each of the widgets (labels, buttons, etc.)
+        # will each fit somewhere in the "grid" (makes things easier to orient)
         self.window = GridLayout()
         self.window.cols = 1
         self.window.size_hint = (0.6, 0.7)
         self.window.pos_hint = {"center_x": 0.5, "center_y": 0.5}
 
         # todo: logo widget
-        # self.window.add_widget(Image(source="filename.png"))
+        # self.window.add_widget(Image(source="logo_filename.png"))
 
         # label widget for the header
-        # also, color scheme can be changed... preferences?
+        # labels are the kivy name for text-only widgets
+        # also, color scheme/theme can be changed... preferences?
         self.header = Label(
             text="EAT MONEY\n" + self._today.strftime("%B %d, %Y"),
             font_size=36,
@@ -86,7 +91,7 @@ class MyApp(App):
         return self.window
 
     # this is a function to read in the csv file to load old data
-    # it turns the csv rows into Food objects and stores them in foot_list
+    # it turns the csv rows into Food objects and stores them in food_list
     def read_old_data(self):
         with open("data.csv") as csv_file:
             csv_reader = csv.reader(csv_file, delimiter=',')
@@ -123,6 +128,14 @@ class MyApp(App):
     # this function corresponds to the behavior when we click
     # the topmost button (its name will change upon selection,
     # so I've decided to call it "big button")
+
+    # additionally, this should also ideally be where the API call
+    # to get nutrient data happens. between submitting food and cost,
+    # we need to devise a mechanism to lookup the user-entered food
+    # in whatever nutrition database we're using and keep track of that
+    # data (this will likely involve adding more attributes to the Food class
+    # and/or this class)
+    # TODO: API things (see above) --> goal is to have this in the prototype
     def big_button_press(self, instance):
         # the if-else corresponds to which button is currently "up"
         # this first (if) block runs when we are at the submit cost menu
@@ -150,7 +163,14 @@ class MyApp(App):
                 self._first_click = True
         self.input_field.text = ""
 
-    # todo: when stats button is pressed (popup???)
+    # todo: when stats button is pressed (popup?)
+    # there is a way to get popup windows.
+    # personally, I think keeping the landing page/menu
+    # simple is the way to go -- the popup window would have
+    # all the important stats (spending, nutrition, history, etc.)
+    # alternatively, we would overwrite the same page and not have
+    # to deal with popup windows (not that it's hard, this is an
+    # aesthetic choice). what do you think will be best?
     def view_stats_button(self, instance):
         pass
 
