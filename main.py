@@ -1,4 +1,5 @@
 from datetime import date
+import FoodItem
 import kivy
 from kivy.app import App
 from kivy.uix.gridlayout import GridLayout
@@ -11,14 +12,17 @@ import csv
 
 class MyApp(App):
     def build(self):
+        self._curr_name = ""
+        self._curr_cost = ""
+
         # here: reads in old data upon build start
         self._food_list = []
         self.read_old_data()
 
-        self.first_click = True
+        self.first_click = False
 
-        today = date.today().strftime("%B %d, %Y")
-        print("Today's date:", today)
+        self._today = date.today()
+        print("Today's date:", self._today.strftime("%B %d, %Y"))
 
         self.window = GridLayout()
         self.window.cols = 1
@@ -30,7 +34,7 @@ class MyApp(App):
 
         # label widget
         self.greeting = Label(
-            text="EAT MONEY\n" + today,
+            text="EAT MONEY\n" + self._today.strftime("%B %d, %Y"),
             font_size=36,
             color='#00FFCE',
             halign='center'
@@ -77,13 +81,27 @@ class MyApp(App):
     def read_old_data(self):
         pass
 
+    def add_new_data(self, data):
+        with open('data.csv', 'a') as f:
+            writer = csv.writer(f)
+            writer.writerow(data)
+
 
     def bigbuttonpress(self, instance):
         if self.first_click:
             self.button.text = "SUBMIT COST"
+            self._curr_cost = self.user.text
             self.first_click = False
+
+            # add food
+            #curr_food = FoodItem(self._today.strftime("%d/%m/%Y"), self._curr_name, self._curr_cost, 100)
+            data_entry = [self._today.strftime("%d/%m/%Y"), self._curr_name, self._curr_cost, 100]
+            #self._food_list.append(curr_food)
+            self.add_new_data(data_entry)
+
         else:
             self.button.text = "SUBMIT FOOD"
+            self._curr_name = self.user.text
             self.first_click = True
         self.user.text = ""
 
