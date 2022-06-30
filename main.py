@@ -19,7 +19,7 @@ class MyApp(App):
         self._food_list = []
         self.read_old_data()
 
-        self.first_click = False
+        self._first_click = False
 
         self._today = date.today()
         print("Today's date:", self._today.strftime("%B %d, %Y"))
@@ -38,21 +38,20 @@ class MyApp(App):
             font_size=36,
             color='#00FFCE',
             halign='center'
-
         )
         self.window.add_widget(self.greeting)
 
         # text input widget
-        self.user = TextInput(
+        self.input_field = TextInput(
             multiline=False,
             padding_y=(20, 20),
             size_hint=(1, 0.5)
         )
 
-        self.window.add_widget(self.user)
+        self.window.add_widget(self.input_field)
 
         # button widget
-        self.button = Button(
+        self.submit_button = Button(
             text="SUBMIT FOOD",
             size_hint=(1, 0.5),
             bold=True,
@@ -60,11 +59,11 @@ class MyApp(App):
             # remove darker overlay of background colour
             # background_normal = ""
         )
-        self.button.bind(on_press=self.bigbuttonpress)
-        self.window.add_widget(self.button)
+        self.submit_button.bind(on_press=self.big_button_press)
+        self.window.add_widget(self.submit_button)
 
         # button widget
-        self.statsbutton = Button(
+        self.stats_button = Button(
             text="VIEW STATS",
             size_hint=(1, 0.5),
             bold=True,
@@ -72,8 +71,17 @@ class MyApp(App):
             # remove darker overlay of background colour
             # background_normal = ""
         )
-        self.statsbutton.bind(on_press=self.viewstatsbutton)
-        self.window.add_widget(self.statsbutton)
+        self.stats_button.bind(on_press=self.view_stats_button)
+        self.window.add_widget(self.stats_button)
+
+        # label widget
+        self.infobox = Label(
+            text="some info here!",
+            font_size=14,
+            color='#00FFCE',
+            halign='center'
+        )
+        self.window.add_widget(self.infobox)
 
         return self.window
 
@@ -100,11 +108,11 @@ class MyApp(App):
             writer.writerow(data)
 
 
-    def bigbuttonpress(self, instance):
-        if self.first_click:
-            self.button.text = "SUBMIT FOOD"
-            self._curr_cost = self.user.text
-            self.first_click = False
+    def big_button_press(self, instance):
+        if self._first_click:
+            self.submit_button.text = "SUBMIT FOOD"
+            self._curr_cost = self.input_field.text
+            self._first_click = False
 
             # add food
             curr_food = Food(self._today.strftime("%d/%m/%Y"), self._curr_name, self._curr_cost, 100)
@@ -113,13 +121,13 @@ class MyApp(App):
             self.add_new_data(data_entry)
 
         else:
-            self.button.text = "SUBMIT COST"
-            self._curr_name = self.user.text
-            self.first_click = True
-        self.user.text = ""
+            self.submit_button.text = "SUBMIT COST"
+            self._curr_name = self.input_field.text
+            self._first_click = True
+        self.input_field.text = ""
 
     # todo: when stats button is preessed (popup???)
-    def viewstatsbutton(self, instance):
+    def view_stats_button(self, instance):
         pass
 
 
