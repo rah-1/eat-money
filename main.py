@@ -1,5 +1,5 @@
 from datetime import date
-import FoodItem
+from food import Food
 import kivy
 from kivy.app import App
 from kivy.uix.gridlayout import GridLayout
@@ -79,28 +79,41 @@ class MyApp(App):
 
     # todo: this is a function to read in the csv file to load old data
     def read_old_data(self):
-        pass
+        with open("data.csv") as csv_file:
+            csv_reader = csv.reader(csv_file, delimiter=',')
+            line_count = 0
+            for row in csv_reader:
+                if line_count != 0:
+                    date = row[0]
+                    name = row[1]
+                    cost = row[2]
+                    calories = row[3]
+
+                    food_item = Food(date, name, cost, calories)
+                    self._food_list.append(food_item)
+
+                line_count += 1
 
     def add_new_data(self, data):
-        with open('data.csv', 'a') as f:
+        with open('data.csv', 'a', newline='') as f:
             writer = csv.writer(f)
             writer.writerow(data)
 
 
     def bigbuttonpress(self, instance):
         if self.first_click:
-            self.button.text = "SUBMIT COST"
+            self.button.text = "SUBMIT FOOD"
             self._curr_cost = self.user.text
             self.first_click = False
 
             # add food
-            #curr_food = FoodItem(self._today.strftime("%d/%m/%Y"), self._curr_name, self._curr_cost, 100)
+            curr_food = Food(self._today.strftime("%d/%m/%Y"), self._curr_name, self._curr_cost, 100)
             data_entry = [self._today.strftime("%d/%m/%Y"), self._curr_name, self._curr_cost, 100]
-            #self._food_list.append(curr_food)
+            self._food_list.append(curr_food)
             self.add_new_data(data_entry)
 
         else:
-            self.button.text = "SUBMIT FOOD"
+            self.button.text = "SUBMIT COST"
             self._curr_name = self.user.text
             self.first_click = True
         self.user.text = ""

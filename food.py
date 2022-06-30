@@ -1,4 +1,4 @@
-class FoodItem:
+class Food:
     # this is a very basic class, there can be more nutrition variables if needed (investigate API!)
     # future consideration: add setters too
     def __init__(self, date, name, cost, calories):
