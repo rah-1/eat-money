@@ -6,6 +6,7 @@ from kivy.uix.image import Image
 from kivy.uix.label import Label
 from kivy.uix.textinput import TextInput
 from kivy.uix.button import Button
+from kivy.uix.popup import Popup
 import csv
 
 
@@ -65,7 +66,7 @@ class MyApp(App):
             bold=True,
             background_color='#00FFCE',
         )
-        self.submit_button.bind(on_press=self.big_button_press)
+        self.submit_button.bind(on_release=self.big_button_press)
         self.window.add_widget(self.submit_button)
 
         # button widget to access stats (implementation currently tentative)
@@ -75,7 +76,7 @@ class MyApp(App):
             bold=True,
             background_color='#00FFCE',
         )
-        self.stats_button.bind(on_press=self.view_stats_button)
+        self.stats_button.bind(on_release=self.view_stats_button)
         self.window.add_widget(self.stats_button)
 
         # label widget to display important info
