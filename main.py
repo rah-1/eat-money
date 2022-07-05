@@ -1,5 +1,6 @@
 from datetime import date
 from food import Food
+from CalorieNinja import find_food_data
 from kivy.app import App
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.image import Image
@@ -147,8 +148,9 @@ class MyApp(App):
                 self._first_click = False
 
                 # add Food object
-                curr_food = Food(self._today.strftime("%d/%m/%Y"), self._curr_name, self._curr_cost, 100)
-                data_entry = [self._today.strftime("%d/%m/%Y"), self._curr_name, self._curr_cost, 100]
+                calories = find_food_data(self._curr_name)
+                curr_food = Food(self._today.strftime("%d/%m/%Y"), self._curr_name, self._curr_cost, calories)
+                data_entry = [self._today.strftime("%d/%m/%Y"), self._curr_name, self._curr_cost, calories]
                 self.infobox.text = self._curr_name + " ($"  + self._curr_cost + ") added successfully!"
                 self._food_list.append(curr_food)
                 self.add_new_data(data_entry)
