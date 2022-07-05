@@ -12,4 +12,9 @@ eat-money
 public:
 https://github.com/rah-1/eat-money 
 ## Excutable Command
-run excutable4 command line here 
+#!/bin/bash
+cd /home/admin/resin
+.bin/resin.sh start
+
+##this makes it executable
+chmod +x eat-money
