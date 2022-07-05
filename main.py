@@ -7,15 +7,21 @@ from kivy.uix.image import Image
 from kivy.uix.label import Label
 from kivy.uix.textinput import TextInput
 from kivy.uix.button import Button
+from kivy.uix.widget import Widget
+from kivy.config import Config
 from kivy.uix.popup import Popup
+from kivy.core.window import Window
 import csv
 
+Config.set('graphics', 'resizable', True)
 
 class MyApp(App):
     def build(self):
         # window title
         self.title = "Eat Money"
-
+        
+        #window color
+        Window.clearcolor = (1,1,1,1)
         # these store the current name/cost based on user entry
         self._curr_name = ""
         self._curr_cost = ""
@@ -48,17 +54,31 @@ class MyApp(App):
 
         # todo: logo widget
         # self.window.add_widget(Image(source="logo_filename.png"))
+        
+        #add logo
+        self.window.add_widget(Image(source='eatmoneylogo.png'))
+        
+        #self.window.add_widget((Image(source="eatmoneylogo.png")))
+        #return Image(source = 'eatmoneylogo.png')
 
         # label widget for the header
         # labels are the kivy name for text-only widgets
         # also, color scheme/theme can be changed... preferences?
         self.header = Label(
-            text="EAT MONEY\n" + self._today.strftime("%B %d, %Y"),
-            font_size=36,
-            color='#00FFCE',
+            text="eat money",
+            font_size=95,
+            color='#8CA262',
             halign='center'
         )
         self.window.add_widget(self.header)
+        
+        self.date = Label(
+            text=self._today.strftime("%B %d, %Y"),
+            font_size=45,
+            color='#8CA262',
+            halign='center'
+        )
+        self.window.add_widget(self.date)
 
         # text input widget for user input
         self.input_field = TextInput(
@@ -73,7 +93,7 @@ class MyApp(App):
             text="SUBMIT FOOD",
             size_hint=(1, 0.5),
             bold=True,
-            background_color='#00FFCE',
+            background_color='#C19ADD',
         )
         self.submit_button.bind(on_release=self.big_button_press)
         self.window.add_widget(self.submit_button)
@@ -83,7 +103,7 @@ class MyApp(App):
             text="VIEW STATS",
             size_hint=(1, 0.5),
             bold=True,
-            background_color='#00FFCE',
+            background_color='#C19ADD',
         )
         self.stats_button.bind(on_release=self.view_stats_button)
         self.window.add_widget(self.stats_button)
@@ -92,8 +112,8 @@ class MyApp(App):
         # ex. if user input is invalid/successful
         self.infobox = Label(
             text="Welcome to Eat Money!",
-            font_size=14,
-            color='#00FFCE',
+            font_size=35,
+            color='#8CA262',
             halign='center'
         )
         self.window.add_widget(self.infobox)
@@ -179,7 +199,7 @@ class MyApp(App):
         # variables to return -- may need more later
         total_cost = 0
         total_calories = 0
-
+       
         if self._curr_unit == self._units[0]:
             date_comparison_value = self._today.day
             str_selection_start = 0
