@@ -19,6 +19,7 @@ class MyApp(App):
     def build(self):
         # window title
         self.title = "Eat Money"
+        self._light_theme = True
         
         #window color
         Window.clearcolor = (1,1,1,1)
@@ -29,7 +30,7 @@ class MyApp(App):
         # units of time available
         # in the future, want the ability to "remember" preferences
         self._units = ["Daily", "Weekly", "Monthly", "Annual"]
-        self._curr_unit = self._units[3]
+        self._curr_unit = self._units[0]
 
         # reads in old data from csv upon build start
         # stores Food objects in food_list
@@ -104,6 +105,15 @@ class MyApp(App):
         )
         self.stats_button.bind(on_release=self.view_stats_button)
         self.window.add_widget(self.stats_button)
+
+        self.theme_button = Button(
+            text="CHANGE THEME",
+            size_hint=(1, 0.5),
+            bold=True,
+            background_color='#C19ADD',
+        )
+        self.theme_button.bind(on_release=self.change_theme_button)
+        self.window.add_widget(self.theme_button)
 
         # label widget to display important info
         # ex. if user input is invalid/successful
@@ -275,6 +285,14 @@ class MyApp(App):
                       size_hint=(None, None), size=(400, 400))
 
         popup.open()
+
+    def change_theme_button(self, instance):
+        if self._light_theme:
+            Window.clearcolor = (0,0,0,0)
+            self._light_theme = False
+        else:
+            Window.clearcolor = (1,1,1,1)
+            self._light_theme = True
 
 
 if __name__ == '__main__':
