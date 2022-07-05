@@ -12,9 +12,17 @@ import csv
 
 class MyApp(App):
     def build(self):
+        # window title
+        self.title = "Eat Money"
+
         # these store the current name/cost based on user entry
         self._curr_name = ""
         self._curr_cost = ""
+
+        # units of time available
+        # in the future, want the ability to "remember" preferences
+        self._units = ["Daily", "Weekly", "Monthly", "Annual"]
+        self._curr_unit = self._units[3]
 
         # reads in old data from csv upon build start
         # stores Food objects in food_list
@@ -164,6 +172,43 @@ class MyApp(App):
                 self._first_click = True
         self.input_field.text = ""
 
+
+    def calc_stats(self):
+        # variables to return -- may need more later
+        total_cost = 0
+        total_calories = 0
+
+        if self._curr_unit == self._units[0]:
+            date_comparison_value = self._today.day
+            str_selection_start = 0
+            str_selection_end = 2
+        elif self._curr_unit == self._units[1]:
+            date_comparison_value = self._today.isocalendar().week
+            str_selection_start = 0
+            str_selection_end = 2
+        elif self._curr_unit == self._units[2]:
+            date_comparison_value = self._today.month
+            str_selection_start = 3
+            str_selection_end = 5
+        if self._curr_unit == self._units[3]:
+            date_comparison_value = self._today.year
+            str_selection_start = 6
+            str_selection_end = 10
+
+        for food in reversed(self._food_list):
+            # todo: deal with weird weekly behavior later
+            if self._curr_unit == self._units[1]:
+                pass
+            else:
+                if int(food.get_date()[str_selection_start:str_selection_end]) == int(date_comparison_value):
+                    total_cost += float(food.get_cost())
+                    total_calories += int(food.get_calories())
+                else:
+                    break
+
+        return total_cost, total_calories
+
+
     # todo: when stats button is pressed (popup?)
     # there is a way to get popup windows.
     # personally, I think keeping the landing page/menu
@@ -173,7 +218,44 @@ class MyApp(App):
     # to deal with popup windows (not that it's hard, this is an
     # aesthetic choice). what do you think will be best?
     def view_stats_button(self, instance):
-        pass
+        cost_output, calories_output = self.calc_stats()
+
+        popup_layout = GridLayout(cols=1)
+        popup_spending_header = Label(
+            text=self._curr_unit + " Spending:",
+            font_size=24,
+            color='#FFFFFF',
+            halign='center'
+        )
+        popup_spending = Label(
+            text="$" + "{:.2f}".format(cost_output),
+            font_size=36,
+            color='#FFFFFF',
+            halign='center'
+        )
+        popup_nutrition_header = Label(
+            text=self._curr_unit + " Nutrition:",
+            font_size=24,
+            color='#FFFFFF',
+            halign='center'
+        )
+        popup_nutrition = Label(
+            text=str(calories_output) + " cals",
+            font_size=36,
+            color='#FFFFFF',
+            halign='center'
+        )
+
+        popup_layout.add_widget(popup_spending_header)
+        popup_layout.add_widget(popup_spending)
+        popup_layout.add_widget(popup_nutrition_header)
+        popup_layout.add_widget(popup_nutrition)
+
+        popup = Popup(title='User Statistics',
+                      content=popup_layout,
+                      size_hint=(None, None), size=(400, 400))
+
+        popup.open()
 
 
 if __name__ == '__main__':
