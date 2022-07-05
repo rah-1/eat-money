@@ -57,8 +57,6 @@ class MyApp(App):
         
         #add logo
         self.window.add_widget(Image(source='eatmoneylogo.png'))
-        
-        #self.window.add_widget((Image(source="eatmoneylogo.png")))
         #return Image(source = 'eatmoneylogo.png')
 
         # label widget for the header
@@ -73,7 +71,7 @@ class MyApp(App):
         self.window.add_widget(self.header)
         
         self.date = Label(
-            text=self._today.strftime("%B %d, %Y"),
+            text=self._today.strftime("%B %d, %Y").lower(),
             font_size=45,
             color='#8CA262',
             halign='center'
@@ -83,7 +81,6 @@ class MyApp(App):
         # text input widget for user input
         self.input_field = TextInput(
             multiline=False,
-            padding_y=(20, 20),
             size_hint=(1, 0.5)
         )
         self.window.add_widget(self.input_field)
@@ -111,7 +108,7 @@ class MyApp(App):
         # label widget to display important info
         # ex. if user input is invalid/successful
         self.infobox = Label(
-            text="Welcome to Eat Money!",
+            text="welcome to eat money!",
             font_size=35,
             color='#8CA262',
             halign='center'
