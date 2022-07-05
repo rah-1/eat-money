@@ -159,7 +159,7 @@ class MyApp(App):
             cost = float(entry)
             return True
         except ValueError:
-            self.infobox.text = "Please enter a valid cost!"
+            self.infobox.text = "please enter a valid cost!"
             return False
 
     # this function corresponds to the behavior when we click
@@ -192,17 +192,26 @@ class MyApp(App):
                     self._food_list.append(curr_food)
                     self.add_new_data(data_entry)
                 else:
-                    self.infobox.text = "Unable to locate " + self._curr_name + " in database!"
+                    self.infobox.text = "unable to locate " + self._curr_name + " in database!"
         else:
             if self.input_field.text == "":
-                self.infobox.text = "Please enter a valid name!"
+                self.infobox.text = "please enter a valid name!"
             else:
                 self.submit_button.text = "SUBMIT COST ($)"
                 self._curr_name = self.input_field.text
-                self.infobox.text = "Please enter the cost of " + self._curr_name
+                self.infobox.text = "please enter the cost of " + self._curr_name
                 self._first_click = True
         self.input_field.text = ""
 
+    # since we don't yet officially have a "reset" button,
+    # this function seeks to emulate that behavior; it will be
+    # called when the other menu buttons are pressed
+    def reset_user_entry(self):
+        self.submit_button.text = "SUBMIT FOOD"
+        self._first_click = False
+        self._curr_name = ""
+        self._curr_cost = ""
+        self.input_field.text = ""
 
     def calc_stats(self):
         # variables to return -- may need more later
@@ -249,6 +258,7 @@ class MyApp(App):
     # to deal with popup windows (not that it's hard, this is an
     # aesthetic choice). what do you think will be best?
     def view_stats_button(self, instance):
+        self.reset_user_entry()
         cost_output, calories_output = self.calc_stats()
 
         popup_layout = GridLayout(cols=1)
@@ -289,12 +299,15 @@ class MyApp(App):
         popup.open()
 
     def change_theme_button(self, instance):
+        self.reset_user_entry()
         if self._light_theme:
             Window.clearcolor = (0,0,0,0)
+            self.infobox.text = "applied dark theme!"
             self._light_theme = False
         else:
             Window.clearcolor = (1,1,1,1)
             self._light_theme = True
+            self.infobox.text = "applied light theme!"
 
 
 if __name__ == '__main__':
