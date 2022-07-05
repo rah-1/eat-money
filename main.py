@@ -71,7 +71,7 @@ class MyApp(App):
         self.window.add_widget(self.header)
         
         self.date = Label(
-            text=self._today.strftime("%B %d, %Y").lower(),
+            text=self._today.strftime("%B %d, %Y"),
             font_size=45,
             color='#8CA262',
             halign='center'
