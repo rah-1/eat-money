@@ -271,7 +271,7 @@ class MyApp(App):
             halign='center'
         )
         popup_nutrition = Label(
-            text="{:.2f}".format(calories_output) + " cals",
+            text="{:.1f}".format(calories_output) + " cals",
             font_size=36,
             color='#FFFFFF',
             halign='center'
