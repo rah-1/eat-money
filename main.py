@@ -185,12 +185,14 @@ class MyApp(App):
 
                 # add Food object
                 calories = find_food_data(self._curr_name)
-                curr_food = Food(self._today.strftime("%d/%m/%Y"), self._curr_name, self._curr_cost, calories)
-                data_entry = [self._today.strftime("%d/%m/%Y"), self._curr_name, self._curr_cost, calories]
-                self.infobox.text = self._curr_name + " ($" + self._curr_cost + ") added successfully!"
-                self._food_list.append(curr_food)
-                self.add_new_data(data_entry)
-
+                if calories != -1:
+                    curr_food = Food(self._today.strftime("%d/%m/%Y"), self._curr_name, self._curr_cost, calories)
+                    data_entry = [self._today.strftime("%d/%m/%Y"), self._curr_name, self._curr_cost, calories]
+                    self.infobox.text = self._curr_name + " ($" + self._curr_cost + ") added successfully!"
+                    self._food_list.append(curr_food)
+                    self.add_new_data(data_entry)
+                else:
+                    self.infobox.text = "Unable to locate " + self._curr_name + " in database!"
         else:
             if self.input_field.text == "":
                 self.infobox.text = "Please enter a valid name!"

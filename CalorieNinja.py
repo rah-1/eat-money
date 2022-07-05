@@ -21,6 +21,9 @@ def find_food_data(food):
     #break down json file to a dict with only the nutrition facts
     data = response.json()
     item_list = data['items']
+    if item_list == []:
+        return -1
+
     nutrition_list = item_list[0]
 
     #store nutrition information into variables
