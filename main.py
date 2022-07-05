@@ -160,7 +160,7 @@ class MyApp(App):
                 calories = find_food_data(self._curr_name)
                 curr_food = Food(self._today.strftime("%d/%m/%Y"), self._curr_name, self._curr_cost, calories)
                 data_entry = [self._today.strftime("%d/%m/%Y"), self._curr_name, self._curr_cost, calories]
-                self.infobox.text = self._curr_name + " ($"  + self._curr_cost + ") added successfully!"
+                self.infobox.text = self._curr_name + " ($" + self._curr_cost + ") added successfully!"
                 self._food_list.append(curr_food)
                 self.add_new_data(data_entry)
 
@@ -168,7 +168,7 @@ class MyApp(App):
             if self.input_field.text == "":
                 self.infobox.text = "Please enter a valid name!"
             else:
-                self.submit_button.text = "SUBMIT COST"
+                self.submit_button.text = "SUBMIT COST ($)"
                 self._curr_name = self.input_field.text
                 self.infobox.text = "Please enter the cost of " + self._curr_name
                 self._first_click = True
@@ -204,7 +204,7 @@ class MyApp(App):
             else:
                 if int(food.get_date()[str_selection_start:str_selection_end]) == int(date_comparison_value):
                     total_cost += float(food.get_cost())
-                    total_calories += int(food.get_calories())
+                    total_calories += float(food.get_calories())
                 else:
                     break
 
@@ -242,7 +242,7 @@ class MyApp(App):
             halign='center'
         )
         popup_nutrition = Label(
-            text=str(calories_output) + " cals",
+            text="{:.2f}".format(calories_output) + " cals",
             font_size=36,
             color='#FFFFFF',
             halign='center'

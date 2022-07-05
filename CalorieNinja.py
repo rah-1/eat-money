@@ -26,7 +26,7 @@ def find_food_data(food):
     #store nutrition information into variables
     #can maybe do stuff with the other info later
     sugar = nutrition_list['sugar_g']
-    fiber = nutrition_list['figer_g']
+    fiber = nutrition_list['fiber_g']
     sodium = nutrition_list['sodium_mg']
     name = nutrition_list['name']
     fat = nutrition_list['fat_total_g']
