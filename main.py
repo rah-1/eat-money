@@ -11,6 +11,7 @@ from kivy.uix.widget import Widget
 from kivy.config import Config
 from kivy.uix.popup import Popup
 from kivy.core.window import Window
+from kivy.lang import Builder
 import csv
 
 Config.set('graphics', 'resizable', True)
@@ -107,6 +108,16 @@ class MyApp(App):
         )
         self.stats_button.bind(on_release=self.view_stats_button)
         self.window.add_widget(self.stats_button)
+        
+        # button widget to view history (implementation also tentative)
+        self.history_button = Button(
+            text="VIEW HISTORY",
+            size_hint=(1, 0.5),
+            bold=True,
+            background_color='#C19ADD', 
+        )
+        self.history_button.bind(on_release=self.view_history_button)
+        self.window.add_widget(self.history_button)
 
         # label widget to display important info
         # ex. if user input is invalid/successful
@@ -278,6 +289,38 @@ class MyApp(App):
                       size_hint=(None, None), size=(400, 400))
 
         popup.open()
+        
+    def view_history_button(self, instance):
+        
+        popup_layout = GridLayout(cols=1)
+        history = ""
+        if(len(self._food_list)>0):
+            recent_date = self._food_list[0].get_date()
+            history += recent_date + "\n"
+            for i in self._food_list:
+                if(i.get_date() != recent_date):
+                    history += i.get_date() + "\n"
+                    recent_date = i.get_date()
+                history += "\t" + i.get_name() + "\t" + i.get_cost() + "\t" + i.get_calories() + "\n"
+        else:
+            history = "No entries to date!"
+            
+        # popup_header = Label(
+        #     text=history,
+        #     size_hint_y=None,
+        #     font_size=24,
+        #     color='#FFFFFF',
+        #     halign='left'
+        # )
+        
+        # popup_header.bind(texture_size=lambda instance, value: setattr(instance, 'height', value[1]))
+        # popup_header.bind(width=lambda instance, value: setattr(instance, 'text_size', (value, None)))
+        
+        popup = Popup(title='History',
+                      content = popup_layout,
+                      size_hint=(None, None), size=(400, 400))
+        popup.open()
+        
 
 
 if __name__ == '__main__':
