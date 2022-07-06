@@ -333,26 +333,25 @@ class MyApp(App):
     def view_history_button(self, instance):
         self.reset_user_entry()
         
-        popup_layout = GridLayout(cols=1, spacing=5, size_hint_y=None)
+        popup_layout = GridLayout(cols=1,size_hint_y=None)
         popup_layout.bind(minimum_height=popup_layout.setter('height'))
 
         if(len(self._food_list)>0):
             recent_date = self._food_list[0].get_date()
             history = recent_date + "\n"
-            
             popup_layout.add_widget(self.history_helper(history))
             
             for i in self._food_list:
                 if(i.get_date() != recent_date):
                     history = i.get_date() + "\n"
                     recent_date = i.get_date()
-                history = "    " + i.get_name() + " " + str(i.get_cost()) + " " + str(i.get_calories()) + " \n"
+                history = i.get_name() + " $" + str(i.get_cost()) + " " + str(i.get_calories()) + " calories\n"
                 popup_layout.add_widget(self.history_helper(history))
         else:
             history = "No entries to date!"
             popup_layout.add_widget(self.history_helper(history))
             
-        root = ScrollView(size_hint=(1, None), size=(700, 700))
+        root = ScrollView(size_hint=(1, None), size=(700, 550))
         root.add_widget(popup_layout)
         
         popup = Popup(title='History',
