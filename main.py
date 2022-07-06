@@ -11,7 +11,10 @@ from kivy.uix.widget import Widget
 from kivy.config import Config
 from kivy.uix.popup import Popup
 from kivy.core.window import Window
-from kivy.lang import Builder
+from kivy.uix.scrollview import ScrollView
+
+
+from kivy.app import runTouchApp
 import csv
 
 Config.set('graphics', 'resizable', True)
@@ -309,35 +312,52 @@ class MyApp(App):
 
         popup.open()
         
-    def view_history_button(self, instance):
+    def history_helper(self, entry):
+        popup_header = Label(
+            text=entry,
+            size_hint_y=None,
+            font_size=24,
+            color='#FFFFFF',
+            halign='left'
+            )
+        return popup_header
         
-        popup_layout = GridLayout(cols=1)
-        history = ""
+    #view history by date:
+    # format is:
+    # July 18, 2022
+    #   Item    Cost    Calories
+    #   Item    Cost    Calories
+    # July 20, 2022
+    #   Item    Cost    Calories
+    #   Item    Cost    Calories
+    def view_history_button(self, instance):
+        self.reset_user_entry()
+        
+        popup_layout = GridLayout(cols=1, spacing=5, size_hint_y=None)
+        popup_layout.bind(minimum_height=popup_layout.setter('height'))
+
         if(len(self._food_list)>0):
             recent_date = self._food_list[0].get_date()
-            history += recent_date + "\n"
+            history = recent_date + "\n"
+            
+            popup_layout.add_widget(self.history_helper(history))
+            
             for i in self._food_list:
                 if(i.get_date() != recent_date):
-                    history += i.get_date() + "\n"
+                    history = i.get_date() + "\n"
                     recent_date = i.get_date()
-                history += "\t" + i.get_name() + "\t" + i.get_cost() + "\t" + i.get_calories() + "\n"
+                history = "    " + i.get_name() + " " + str(i.get_cost()) + " " + str(i.get_calories()) + " \n"
+                popup_layout.add_widget(self.history_helper(history))
         else:
             history = "No entries to date!"
+            popup_layout.add_widget(self.history_helper(history))
             
-        # popup_header = Label(
-        #     text=history,
-        #     size_hint_y=None,
-        #     font_size=24,
-        #     color='#FFFFFF',
-        #     halign='left'
-        # )
-        
-        # popup_header.bind(texture_size=lambda instance, value: setattr(instance, 'height', value[1]))
-        # popup_header.bind(width=lambda instance, value: setattr(instance, 'text_size', (value, None)))
+        root = ScrollView(size_hint=(1, None), size=(700, 700))
+        root.add_widget(popup_layout)
         
         popup = Popup(title='History',
-                      content = popup_layout,
-                      size_hint=(None, None), size=(400, 400))
+                      content = root,
+                      size_hint=(None, None), size=(700, 700))
         popup.open()
         
 
