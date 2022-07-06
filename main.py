@@ -20,6 +20,7 @@ class MyApp(App):
     def build(self):
         # window title
         self.title = "Eat Money"
+        self._light_theme = True
         
         #window color
         Window.clearcolor = (1,1,1,1)
@@ -30,7 +31,7 @@ class MyApp(App):
         # units of time available
         # in the future, want the ability to "remember" preferences
         self._units = ["Daily", "Weekly", "Monthly", "Annual"]
-        self._curr_unit = self._units[3]
+        self._curr_unit = self._units[0]
 
         # reads in old data from csv upon build start
         # stores Food objects in food_list
@@ -58,8 +59,6 @@ class MyApp(App):
         
         #add logo
         self.window.add_widget(Image(source='eatmoneylogo.png'))
-        
-        #self.window.add_widget((Image(source="eatmoneylogo.png")))
         #return Image(source = 'eatmoneylogo.png')
 
         # label widget for the header
@@ -84,7 +83,6 @@ class MyApp(App):
         # text input widget for user input
         self.input_field = TextInput(
             multiline=False,
-            padding_y=(20, 20),
             size_hint=(1, 0.5)
         )
         self.window.add_widget(self.input_field)
@@ -119,10 +117,19 @@ class MyApp(App):
         self.history_button.bind(on_release=self.view_history_button)
         self.window.add_widget(self.history_button)
 
+        self.theme_button = Button(
+            text="CHANGE THEME",
+            size_hint=(1, 0.5),
+            bold=True,
+            background_color='#C19ADD',
+        )
+        self.theme_button.bind(on_release=self.change_theme_button)
+        self.window.add_widget(self.theme_button)
+
         # label widget to display important info
         # ex. if user input is invalid/successful
         self.infobox = Label(
-            text="Welcome to Eat Money!",
+            text="welcome to eat money!",
             font_size=35,
             color='#8CA262',
             halign='center'
@@ -163,7 +170,7 @@ class MyApp(App):
             cost = float(entry)
             return True
         except ValueError:
-            self.infobox.text = "Please enter a valid cost!"
+            self.infobox.text = "please enter a valid cost!"
             return False
 
     # this function corresponds to the behavior when we click
@@ -189,22 +196,33 @@ class MyApp(App):
 
                 # add Food object
                 calories = find_food_data(self._curr_name)
-                curr_food = Food(self._today.strftime("%d/%m/%Y"), self._curr_name, self._curr_cost, calories)
-                data_entry = [self._today.strftime("%d/%m/%Y"), self._curr_name, self._curr_cost, calories]
-                self.infobox.text = self._curr_name + " ($" + self._curr_cost + ") added successfully!"
-                self._food_list.append(curr_food)
-                self.add_new_data(data_entry)
-
+                if calories != -1:
+                    curr_food = Food(self._today.strftime("%d/%m/%Y"), self._curr_name, self._curr_cost, calories)
+                    data_entry = [self._today.strftime("%d/%m/%Y"), self._curr_name, self._curr_cost, calories]
+                    self.infobox.text = self._curr_name + " ($" + self._curr_cost + ") added successfully!"
+                    self._food_list.append(curr_food)
+                    self.add_new_data(data_entry)
+                else:
+                    self.infobox.text = "unable to locate " + self._curr_name + " in database!"
         else:
             if self.input_field.text == "":
-                self.infobox.text = "Please enter a valid name!"
+                self.infobox.text = "please enter a valid name!"
             else:
                 self.submit_button.text = "SUBMIT COST ($)"
                 self._curr_name = self.input_field.text
-                self.infobox.text = "Please enter the cost of " + self._curr_name
+                self.infobox.text = "please enter the cost of " + self._curr_name
                 self._first_click = True
         self.input_field.text = ""
 
+    # since we don't yet officially have a "reset" button,
+    # this function seeks to emulate that behavior; it will be
+    # called when the other menu buttons are pressed
+    def reset_user_entry(self):
+        self.submit_button.text = "SUBMIT FOOD"
+        self._first_click = False
+        self._curr_name = ""
+        self._curr_cost = ""
+        self.input_field.text = ""
 
     def calc_stats(self):
         # variables to return -- may need more later
@@ -251,6 +269,7 @@ class MyApp(App):
     # to deal with popup windows (not that it's hard, this is an
     # aesthetic choice). what do you think will be best?
     def view_stats_button(self, instance):
+        self.reset_user_entry()
         cost_output, calories_output = self.calc_stats()
 
         popup_layout = GridLayout(cols=1)
@@ -273,7 +292,7 @@ class MyApp(App):
             halign='center'
         )
         popup_nutrition = Label(
-            text="{:.2f}".format(calories_output) + " cals",
+            text="{:.1f}".format(calories_output) + " cals",
             font_size=36,
             color='#FFFFFF',
             halign='center'
@@ -321,6 +340,17 @@ class MyApp(App):
                       size_hint=(None, None), size=(400, 400))
         popup.open()
         
+
+    def change_theme_button(self, instance):
+        self.reset_user_entry()
+        if self._light_theme:
+            Window.clearcolor = (0,0,0,0)
+            self.infobox.text = "applied dark theme!"
+            self._light_theme = False
+        else:
+            Window.clearcolor = (1,1,1,1)
+            self._light_theme = True
+            self.infobox.text = "applied light theme!"
 
 
 if __name__ == '__main__':

@@ -1,8 +1,8 @@
 
-# Eat-money
+# Eat Money
 
-This project's main goal is to help people track how much money, 
-and how many calories people use for a sepecific range of dates.
+This project's main goal is to help end users track how much money
+they spend and how many calories they consume across a specified time frame.
 
 
 ## Package name for PIP installation 
