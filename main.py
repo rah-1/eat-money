@@ -335,7 +335,8 @@ class MyApp(App):
         
         popup_layout = GridLayout(cols=1,size_hint_y=None)
         popup_layout.bind(minimum_height=popup_layout.setter('height'))
-
+        
+        #retrienves item information from food list. adds each item as its own text widget
         if(len(self._food_list)>0):
             recent_date = self._food_list[0].get_date()
             history = recent_date + "\n"
@@ -345,15 +346,15 @@ class MyApp(App):
                 if(i.get_date() != recent_date):
                     history = i.get_date() + "\n"
                     recent_date = i.get_date()
-                history = i.get_name() + " $" + str(i.get_cost()) + " " + str(i.get_calories()) + " calories\n"
+                history = "%s$%s%s calories"%(str(i.get_name()).ljust(25),str(i.get_cost()).ljust(25),str(i.get_calories()))
                 popup_layout.add_widget(self.history_helper(history))
         else:
             history = "No entries to date!"
             popup_layout.add_widget(self.history_helper(history))
-            
+        
+        #makes the widgets scrollable
         root = ScrollView(size_hint=(1, None), size=(700, 550))
         root.add_widget(popup_layout)
-        
         popup = Popup(title='History',
                       content = root,
                       size_hint=(None, None), size=(700, 700))
