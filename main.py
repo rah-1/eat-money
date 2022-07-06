@@ -14,7 +14,6 @@ from kivy.core.window import Window
 from kivy.uix.scrollview import ScrollView
 
 
-from kivy.app import runTouchApp
 import csv
 
 Config.set('graphics', 'resizable', True)
@@ -56,13 +55,9 @@ class MyApp(App):
         self.window.cols = 1
         self.window.size_hint = (0.6, 0.7)
         self.window.pos_hint = {"center_x": 0.5, "center_y": 0.5}
-
-        # todo: logo widget
-        # self.window.add_widget(Image(source="logo_filename.png"))
         
         #add logo
         self.window.add_widget(Image(source='eatmoneylogo.png'))
-        #return Image(source = 'eatmoneylogo.png')
 
         # label widget for the header
         # labels are the kivy name for text-only widgets
@@ -323,13 +318,6 @@ class MyApp(App):
         return popup_header
         
     #view history by date:
-    # format is:
-    # July 18, 2022
-    #   Item    Cost    Calories
-    #   Item    Cost    Calories
-    # July 20, 2022
-    #   Item    Cost    Calories
-    #   Item    Cost    Calories
     def view_history_button(self, instance):
         self.reset_user_entry()
         
