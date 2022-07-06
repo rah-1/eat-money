@@ -12,13 +12,7 @@ from kivy.config import Config
 from kivy.uix.popup import Popup
 from kivy.core.window import Window
 from kivy.uix.scrollview import ScrollView
-<<<<<<< HEAD
-
-
-=======
-from kivy.app import runTouchApp
 import json
->>>>>>> 99a578819b35a52515180532e5f6b4acb97c6f88
 import csv
 
 Config.set('graphics', 'resizable', True)
