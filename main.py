@@ -12,9 +12,8 @@ from kivy.config import Config
 from kivy.uix.popup import Popup
 from kivy.core.window import Window
 from kivy.uix.scrollview import ScrollView
-
-
 from kivy.app import runTouchApp
+import json
 import csv
 
 Config.set('graphics', 'resizable', True)
@@ -139,7 +138,29 @@ class MyApp(App):
         )
         self.window.add_widget(self.infobox)
 
+        self.remember_preference()
+
         return self.window
+
+    def remember_preference(self):
+        with open('preferences.json', 'r') as r_prefs:
+            prefs_dict = json.load(r_prefs)
+
+        # currently hardcoded for num of preferences (2)
+        if len(prefs_dict) == 2:
+            if prefs_dict["theme"] == "dark":
+                self.change_theme_button("new")
+            if prefs_dict["unit"] in self._units:
+                self._curr_unit = prefs_dict["unit"]
+
+
+    def save_preferences(self):
+        if self._light_theme:
+            prefs_dict = {"theme": "light", "unit": self._curr_unit.lower()}
+        else:
+            prefs_dict = {"theme": "dark", "unit": self._curr_unit.lower()}
+        with open('preferences.json', 'w') as w_prefs:
+            json.dump(prefs_dict, w_prefs, indent=4)
 
     # this is a function to read in the csv file to load old data
     # it turns the csv rows into Food objects and stores them in food_list
@@ -226,6 +247,7 @@ class MyApp(App):
         self._curr_name = ""
         self._curr_cost = ""
         self.input_field.text = ""
+        self.infobox.text = "welcome to eat money!"
 
     def calc_stats(self):
         # variables to return -- may need more later
@@ -272,10 +294,19 @@ class MyApp(App):
     # to deal with popup windows (not that it's hard, this is an
     # aesthetic choice). what do you think will be best?
     def view_stats_button(self, instance):
+        if instance == "new":
+            self._stats_popup.dismiss()
         self.reset_user_entry()
         cost_output, calories_output = self.calc_stats()
 
         popup_layout = GridLayout(cols=1)
+        popup_unit_button = Button(
+            text="CHANGE UNIT",
+            size_hint=(1, 0.5),
+            bold=True,
+            background_color='#C19ADD',
+        )
+        popup_unit_button.bind(on_release=self.rotate_units)
         popup_spending_header = Label(
             text=self._curr_unit + " Spending:",
             font_size=24,
@@ -301,16 +332,27 @@ class MyApp(App):
             halign='center'
         )
 
+        popup_layout.add_widget(popup_unit_button)
         popup_layout.add_widget(popup_spending_header)
         popup_layout.add_widget(popup_spending)
         popup_layout.add_widget(popup_nutrition_header)
         popup_layout.add_widget(popup_nutrition)
 
-        popup = Popup(title='User Statistics',
+        self._stats_popup = Popup(title='User Statistics',
                       content=popup_layout,
                       size_hint=(None, None), size=(400, 400))
 
-        popup.open()
+        self._stats_popup.open()
+
+    def rotate_units(self, instance):
+        curr_pos = self._units.index(self._curr_unit)
+        if curr_pos != len(self._units)-1:
+            self._curr_unit = self._units[curr_pos+1]
+        else:
+            self._curr_unit = self._units[0]
+
+        self.save_preferences()
+        self.view_stats_button("new")
         
     def history_helper(self, entry):
         popup_header = Label(
@@ -365,12 +407,14 @@ class MyApp(App):
         self.reset_user_entry()
         if self._light_theme:
             Window.clearcolor = (0,0,0,0)
-            self.infobox.text = "applied dark theme!"
+            if instance != "new":
+                self.infobox.text = "applied dark theme!"
             self._light_theme = False
         else:
             Window.clearcolor = (1,1,1,1)
             self._light_theme = True
             self.infobox.text = "applied light theme!"
+        self.save_preferences()
 
 
 if __name__ == '__main__':
