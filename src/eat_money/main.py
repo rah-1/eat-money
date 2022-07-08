@@ -24,14 +24,15 @@ import csv
 
 Config.set('graphics', 'resizable', True)
 
+
 class MyApp(App):
     def build(self):
         # window title
         self.title = "Eat Money"
         self._light_theme = True
-        
-        #window color
-        Window.clearcolor = (1,1,1,1)
+
+        # window color
+        Window.clearcolor = (1, 1, 1, 1)
         # these store the current name/cost based on user entry
         self._curr_name = ""
         self._curr_cost = ""
@@ -62,12 +63,8 @@ class MyApp(App):
         self.window.size_hint = (0.6, 0.7)
         self.window.pos_hint = {"center_x": 0.5, "center_y": 0.5}
 
-        # todo: logo widget
-        # self.window.add_widget(Image(source="logo_filename.png"))
-        
-        #add logo
+        # add logo
         self.window.add_widget(Image(source='eatmoneylogo.png'))
-        #return Image(source = 'eatmoneylogo.png')
 
         # label widget for the header
         # labels are the kivy name for text-only widgets
@@ -79,7 +76,7 @@ class MyApp(App):
             halign='center'
         )
         self.window.add_widget(self.header)
-        
+
         self.date = Label(
             text=self._today.strftime("%B %d, %Y"),
             font_size=45,
@@ -114,13 +111,13 @@ class MyApp(App):
         )
         self.stats_button.bind(on_release=self.view_stats_button)
         self.window.add_widget(self.stats_button)
-        
+
         # button widget to view history (implementation also tentative)
         self.history_button = Button(
             text="VIEW HISTORY",
             size_hint=(1, 0.5),
             bold=True,
-            background_color='#C19ADD', 
+            background_color='#C19ADD',
         )
         self.history_button.bind(on_release=self.view_history_button)
         self.window.add_widget(self.history_button)
@@ -158,7 +155,6 @@ class MyApp(App):
                 self.change_theme_button("new")
             if prefs_dict["unit"] in self._units:
                 self._curr_unit = prefs_dict["unit"]
-
 
     def save_preferences(self):
         if self._light_theme:
@@ -259,7 +255,7 @@ class MyApp(App):
         # variables to return -- may need more later
         total_cost = 0
         total_calories = 0
-       
+
         if self._curr_unit == self._units[0]:
             date_comparison_value = self._today.day
             str_selection_start = 0
@@ -289,7 +285,6 @@ class MyApp(App):
                     break
 
         return total_cost, total_calories
-
 
     # todo: when stats button is pressed (popup?)
     # there is a way to get popup windows.
@@ -345,21 +340,21 @@ class MyApp(App):
         popup_layout.add_widget(popup_nutrition)
 
         self._stats_popup = Popup(title='User Statistics',
-                      content=popup_layout,
-                      size_hint=(None, None), size=(400, 400))
+                                  content=popup_layout,
+                                  size_hint=(None, None), size=(400, 400))
 
         self._stats_popup.open()
 
     def rotate_units(self, instance):
         curr_pos = self._units.index(self._curr_unit)
-        if curr_pos != len(self._units)-1:
-            self._curr_unit = self._units[curr_pos+1]
+        if curr_pos != len(self._units) - 1:
+            self._curr_unit = self._units[curr_pos + 1]
         else:
             self._curr_unit = self._units[0]
 
         self.save_preferences()
         self.view_stats_button("new")
-        
+
     def history_helper(self, entry):
         popup_header = Label(
             text=entry,
@@ -367,57 +362,50 @@ class MyApp(App):
             font_size=24,
             color='#FFFFFF',
             halign='left'
-            )
+        )
         return popup_header
-        
-    #view history by date:
-    # format is:
-    # July 18, 2022
-    #   Item    Cost    Calories
-    #   Item    Cost    Calories
-    # July 20, 2022
-    #   Item    Cost    Calories
-    #   Item    Cost    Calories
+
+    # view history by date:
     def view_history_button(self, instance):
         self.reset_user_entry()
-        
-        popup_layout = GridLayout(cols=1,size_hint_y=None)
+
+        popup_layout = GridLayout(cols=1, size_hint_y=None)
         popup_layout.bind(minimum_height=popup_layout.setter('height'))
-        
-        #retrienves item information from food list. adds each item as its own text widget
-        if(len(self._food_list)>0):
+
+        # retrienves item information from food list. adds each item as its own text widget
+        if (len(self._food_list) > 0):
             recent_date = self._food_list[0].get_date()
             history = recent_date + "\n"
             popup_layout.add_widget(self.history_helper(history))
-            
+
             for i in self._food_list:
-                if(i.get_date() != recent_date):
+                if (i.get_date() != recent_date):
                     history = i.get_date() + "\n"
                     recent_date = i.get_date()
-                history = "%s$%s%s calories"%(str(i.get_name()).ljust(25),str(i.get_cost()).ljust(25),str(i.get_calories()))
+                history = "%s$%s%s calories" % (
+                str(i.get_name()).ljust(25), str(i.get_cost()).ljust(25), str(i.get_calories()))
                 popup_layout.add_widget(self.history_helper(history))
         else:
             history = "No entries to date!"
             popup_layout.add_widget(self.history_helper(history))
-        
-        #makes the widgets scrollable
+
+        # makes the widgets scrollable
         root = ScrollView(size_hint=(1, None), size=(700, 550))
         root.add_widget(popup_layout)
         popup = Popup(title='History',
-                      content = root,
+                      content=root,
                       size_hint=(None, None), size=(700, 700))
         popup.open()
-        
 
     def change_theme_button(self, instance):
         self.reset_user_entry()
         if self._light_theme:
-            Window.clearcolor = (0,0,0,0)
+            Window.clearcolor = (0, 0, 0, 0)
             if instance != "new":
                 self.infobox.text = "applied dark theme!"
             self._light_theme = False
         else:
-            Window.clearcolor = (1,1,1,1)
+            Window.clearcolor = (1, 1, 1, 1)
             self._light_theme = True
             self.infobox.text = "applied light theme!"
         self.save_preferences()
