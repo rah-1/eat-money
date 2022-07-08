@@ -1,10 +1,7 @@
-<<<<<<< Updated upstream
-
-=======
-Contributions 
-Natalie - README File 
+Contributions
 Zoe - View history, logo/design, API implementation
 Rahul - Backend, database setup, add cost, stats
+Natalie - README File
 Immanuel - Packaging, distribution
 
 
