@@ -1,4 +1,4 @@
-![Logo](eatmoneylogo.png)
+![Logo](src/eat_money/eatmoneylogo.png)
 # Eat Money
 
 This project's main goal is to help users track how much money
