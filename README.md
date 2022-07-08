@@ -1,4 +1,4 @@
-![Logo](src/eat_money/eatmoneylogo.png)
+![Logo](eatmoneylogo.png)
 # Eat Money
 
 This project's main goal is to help users track how much money
@@ -15,9 +15,9 @@ public: https://github.com/rah-1/eat-money
 ## Executable Command
 eat-money
 ## Technologies
-Project is created with:
-Language: Python 3.10
-API: CalorieNinja
+Project is created with:  
+Language: Python 3.10  
+API: CalorieNinja  
 UI : Kivy
 
 ## Authors
