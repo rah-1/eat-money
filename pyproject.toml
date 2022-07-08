@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "eat_money"
+version = "0.3.1"
+description = "Calorie/Spending tracker"
+dependencies = ["requests",
+                "Kivy",
+]
+readme = "README.md"
+license = {file = "LICENSE.txt"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["eat_money*"]
+exclude = ["eat_money.tests*"]
+namespaces = false
+
+[project.scripts]
+eat-money = "eat_money.main:main"

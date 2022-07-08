@@ -1,0 +1,6 @@
+Kivy
+requests
+setuptools
+datetime
+build
+wheel
