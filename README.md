@@ -22,3 +22,6 @@ UI : Kivy
 
 ## Authors
 Zoe Brown, Rahul Chari, Natalie Franklin, Immanuel Wilson  
+
+## Notes
+"View History" dates are presented in DD/MM/YYYY format
