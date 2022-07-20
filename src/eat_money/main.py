@@ -223,8 +223,8 @@ class MyApp(App):
                 # add Food object
                 calories = find_food_data(self._curr_name)
                 if calories != -1:
-                    curr_food = Food(self._today.strftime("%d/%m/%Y"), self._curr_name, self._curr_cost, calories)
-                    data_entry = [self._today.strftime("%d/%m/%Y"), self._curr_name, self._curr_cost, calories]
+                    curr_food = Food(self._today.strftime("%Y-%m-%d"), self._curr_name, self._curr_cost, calories)
+                    data_entry = [self._today.strftime("%Y-%m-%d"), self._curr_name, self._curr_cost, calories]
                     self.infobox.text = self._curr_name + " ($" + self._curr_cost + ") added successfully!"
                     self._food_list.append(curr_food)
                     self.add_new_data(data_entry)
@@ -258,25 +258,27 @@ class MyApp(App):
 
         if self._curr_unit == self._units[0]:
             date_comparison_value = self._today.day
-            str_selection_start = 0
-            str_selection_end = 2
+            str_selection_start = 8
+            str_selection_end = 10
         elif self._curr_unit == self._units[1]:
             date_comparison_value = self._today.isocalendar().week
-            str_selection_start = 0
-            str_selection_end = 2
+            str_selection_start = 8
+            str_selection_end = 10
         elif self._curr_unit == self._units[2]:
             date_comparison_value = self._today.month
-            str_selection_start = 3
-            str_selection_end = 5
+            str_selection_start = 5
+            str_selection_end = 7
         if self._curr_unit == self._units[3]:
             date_comparison_value = self._today.year
-            str_selection_start = 6
-            str_selection_end = 10
+            str_selection_start = 0
+            str_selection_end = 4
 
         for food in reversed(self._food_list):
             # todo: deal with weird weekly behavior later
             if self._curr_unit == self._units[1]:
-                pass
+                if int(date(int(food.get_date()[0:4]), int(food.get_date()[5:7]), int(food.get_date()[8:10])).isocalendar().week) == int(date_comparison_value):
+                    total_cost += float(food.get_cost())
+                    total_calories += float(food.get_calories())
             else:
                 if int(food.get_date()[str_selection_start:str_selection_end]) == int(date_comparison_value):
                     total_cost += float(food.get_cost())
