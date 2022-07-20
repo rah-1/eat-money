@@ -176,8 +176,13 @@ class MyApp(App):
                     name = row[1]
                     cost = row[2]
                     calories = row[3]
+                    carbs = row[4]
+                    protein = row[5]
+                    fat = row[6]
+                    sugar = row[7]
+                    sodium = row[8]
 
-                    food_item = Food(date, name, cost, calories)
+                    food_item = Food(date, name, cost, calories, carbs, protein, fat, sugar, sodium)
                     self._food_list.append(food_item)
 
                 line_count += 1
@@ -221,10 +226,10 @@ class MyApp(App):
                 self._first_click = False
 
                 # add Food object
-                calories = find_food_data(self._curr_name)
+                db_name, calories, carbs, protein, fat, sugar, sodium = find_food_data(self._curr_name)
                 if calories != -1:
-                    curr_food = Food(self._today.strftime("%Y-%m-%d"), self._curr_name, self._curr_cost, calories)
-                    data_entry = [self._today.strftime("%Y-%m-%d"), self._curr_name, self._curr_cost, calories]
+                    curr_food = Food(self._today.strftime("%Y-%m-%d"), db_name, self._curr_cost, calories, carbs, protein, fat, sugar, sodium)
+                    data_entry = [self._today.strftime("%Y-%m-%d"), db_name, self._curr_cost, calories, carbs, protein, fat, sugar, sodium]
                     self.infobox.text = self._curr_name + " ($" + self._curr_cost + ") added successfully!"
                     self._food_list.append(curr_food)
                     self.add_new_data(data_entry)

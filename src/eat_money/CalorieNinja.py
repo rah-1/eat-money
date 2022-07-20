@@ -22,7 +22,7 @@ def find_food_data(food):
     data = response.json()
     item_list = data['items']
     if item_list == []:
-        return -1
+        return -1, -1, -1, -1, -1, -1, -1
 
     nutrition_list = item_list[0]
 
@@ -37,6 +37,6 @@ def find_food_data(food):
     protein = nutrition_list['protein_g']
     carbs = nutrition_list['carbohydrates_total_g']
     
-    return calories
+    return name, calories, carbs, protein, fat, sugar, sodium
     
     
