@@ -60,7 +60,7 @@ class MyApp(App):
         # will each fit somewhere in the "grid" (makes things easier to orient)
         self.window = GridLayout()
         self.window.cols = 1
-        self.window.size_hint = (0.6, 0.7)
+        self.window.size_hint = (0.5, 0.7)
         self.window.pos_hint = {"center_x": 0.5, "center_y": 0.5}
 
         # add logo
@@ -260,6 +260,12 @@ class MyApp(App):
         # variables to return -- may need more later
         total_cost = 0
         total_calories = 0
+        total_carbs = 0
+        total_protein = 0
+        total_fat = 0
+        total_sugar = 0
+        total_sodium = 0
+
 
         if self._curr_unit == self._units[0]:
             date_comparison_value = self._today.day
@@ -284,14 +290,24 @@ class MyApp(App):
                 if int(date(int(food.get_date()[0:4]), int(food.get_date()[5:7]), int(food.get_date()[8:10])).isocalendar().week) == int(date_comparison_value):
                     total_cost += float(food.get_cost())
                     total_calories += float(food.get_calories())
+                    total_carbs += float(food.get_carbs())
+                    total_protein += float(food.get_protein())
+                    total_fat += float(food.get_fat())
+                    total_sugar += float(food.get_sugar())
+                    total_sodium += float(food.get_sodium())
             else:
                 if int(food.get_date()[str_selection_start:str_selection_end]) == int(date_comparison_value):
                     total_cost += float(food.get_cost())
                     total_calories += float(food.get_calories())
+                    total_carbs += float(food.get_carbs())
+                    total_protein += float(food.get_protein())
+                    total_fat += float(food.get_fat())
+                    total_sugar += float(food.get_sugar())
+                    total_sodium += float(food.get_sodium())
                 else:
                     break
 
-        return total_cost, total_calories
+        return total_cost, total_calories, total_carbs, total_protein, total_fat, total_sugar, total_sodium
 
     # todo: when stats button is pressed (popup?)
     # there is a way to get popup windows.
@@ -305,23 +321,25 @@ class MyApp(App):
         if instance == "new":
             self._stats_popup.dismiss()
         self.reset_user_entry()
-        cost_output, calories_output = self.calc_stats()
+        cost_output, calories_output, carbs_output, protein_output, fat_output, sugar_output, sodium_output = self.calc_stats()
 
         popup_layout = GridLayout(cols=1)
         popup_unit_button = Button(
             text="CHANGE UNIT",
-            size_hint=(1, 0.5),
+            size_hint=(1, 0.8),
             bold=True,
             background_color='#C19ADD',
         )
         popup_unit_button.bind(on_release=self.rotate_units)
         popup_spending_header = Label(
             text=self._curr_unit + " Spending:",
+            underline=True,
             font_size=24,
             color='#FFFFFF',
             halign='center'
         )
         popup_spending = Label(
+            bold=True,
             text="$" + "{:.2f}".format(cost_output),
             font_size=36,
             color='#FFFFFF',
@@ -329,13 +347,45 @@ class MyApp(App):
         )
         popup_nutrition_header = Label(
             text=self._curr_unit + " Nutrition:",
+            underline=True,
             font_size=24,
             color='#FFFFFF',
             halign='center'
         )
-        popup_nutrition = Label(
+        popup_calories = Label(
+            bold=True,
             text="{:.1f}".format(calories_output) + " cals",
             font_size=36,
+            color='#FFFFFF',
+            halign='center'
+        )
+        popup_carbs = Label(
+            text="{:.1f}".format(carbs_output) + "g of carbs",
+            font_size=24,
+            color='#FFFFFF',
+            halign='center'
+        )
+        popup_protein = Label(
+            text="{:.1f}".format(protein_output) + "g of protein",
+            font_size=24,
+            color='#FFFFFF',
+            halign='center'
+        )
+        popup_fat = Label(
+            text="{:.1f}".format(fat_output) + " g of total fats",
+            font_size=24,
+            color='#FFFFFF',
+            halign='center'
+        )
+        popup_sugar = Label(
+            text="{:.1f}".format(sugar_output) + " g of sugar",
+            font_size=24,
+            color='#FFFFFF',
+            halign='center'
+        )
+        popup_sodium = Label(
+            text="{:.1f}".format(sodium_output) + " g of sodium",
+            font_size=24,
             color='#FFFFFF',
             halign='center'
         )
@@ -344,11 +394,16 @@ class MyApp(App):
         popup_layout.add_widget(popup_spending_header)
         popup_layout.add_widget(popup_spending)
         popup_layout.add_widget(popup_nutrition_header)
-        popup_layout.add_widget(popup_nutrition)
+        popup_layout.add_widget(popup_calories)
+        popup_layout.add_widget(popup_carbs)
+        popup_layout.add_widget(popup_protein)
+        popup_layout.add_widget(popup_fat)
+        popup_layout.add_widget(popup_sugar)
+        popup_layout.add_widget(popup_sodium)
 
         self._stats_popup = Popup(title='User Statistics',
                                   content=popup_layout,
-                                  size_hint=(None, None), size=(400, 400))
+                                  size_hint=(None, None), size=(400, 550))
 
         self._stats_popup.open()
 
