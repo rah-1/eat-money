@@ -5,6 +5,7 @@ This project's main goal is to help users track how much money
 they spend and how many calories they consume across a specified time frame.
 This helps to solve the problem people face when they go abroad of making sure they save money as well as watching their diet.
 
+[YouTube] https://youtu.be/sFtifrv_piE  
 
 
 ## Package name for PIP installation
@@ -14,8 +15,7 @@ public: https://github.com/rah-1/eat-money
 
 ## Executable Command
 eat-money
-## Technologies
-Project is created with:  
+## Technologies 
 Language: Python 3.10  
 API: CalorieNinja  
 UI : Kivy
@@ -24,4 +24,3 @@ UI : Kivy
 Zoe Brown, Rahul Chari, Natalie Franklin, Immanuel Wilson  
 
 ## Notes
-"View History" dates are presented in DD/MM/YYYY format

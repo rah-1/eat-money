@@ -42,6 +42,8 @@ MDTextField:
 """
 class MyApp(MDApp):
     def build(self):
+        Window.bind(on_keyboard=self.dismiss_popup_key_press)
+
         # window title
         self.title = "Eat Money"
         self._light_theme = True
@@ -179,6 +181,15 @@ class MyApp(MDApp):
         self.remember_preference()
 
         return self.window
+
+    # this function dismisses any open popup windows
+    # if the user presses ESC, SPACE, or ENTER
+    # side-note: kivy closes the main window when ESC is pressed normally
+    def dismiss_popup_key_press(self, key, scancode, codepoint, modifiers, idk):
+        if isinstance(App.get_running_app().root_window.children[0], Popup):
+            if scancode == 13 or scancode == 27 or scancode == 32:
+                App.get_running_app().root_window.children[0].dismiss()
+
 
     def remember_preference(self):
         with open('preferences.json', 'r') as r_prefs:
@@ -343,7 +354,6 @@ class MyApp(MDApp):
             str_selection_end = 4
 
         for food in reversed(self._food_list):
-            # todo: deal with weird weekly behavior later
             if self._curr_unit == self._units[1]:
                 if int(date(int(food.get_date()[0:4]), int(food.get_date()[5:7]), int(food.get_date()[8:10])).isocalendar().week) == int(date_comparison_value):
                     total_cost += float(food.get_cost())
@@ -367,14 +377,6 @@ class MyApp(MDApp):
 
         return total_cost, total_calories, total_carbs, total_protein, total_fat, total_sugar, total_sodium
 
-    # todo: when stats button is pressed (popup?)
-    # there is a way to get popup windows.
-    # personally, I think keeping the landing page/menu
-    # simple is the way to go -- the popup window would have
-    # all the important stats (spending, nutrition, history, etc.)
-    # alternatively, we would overwrite the same page and not have
-    # to deal with popup windows (not that it's hard, this is an
-    # aesthetic choice). what do you think will be best?
     def view_stats_button(self, instance):
         if instance == "new":
             self._stats_popup.dismiss()
