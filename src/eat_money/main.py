@@ -1,8 +1,19 @@
 from datetime import date
 import os
 
+from kivymd.uix.toolbar import MDToolbar, MDBottomAppBar
+
 from eat_money.food import Food
 from eat_money.CalorieNinja import find_food_data
+
+#TODO: will need to add kivymd in project requirements/packaging
+from kivymd.app import MDApp
+from kivy.lang import Builder
+from kivymd.uix.label import Label
+from kivymd.uix.list import MDList, TwoLineListItem
+from kivymd.uix.dialog import MDDialog
+from kivymd.uix.datatables import MDDataTable
+from kivy.metrics import dp
 
 
 from kivy.app import App
@@ -24,8 +35,12 @@ import csv
 
 Config.set('graphics', 'resizable', True)
 
-
-class MyApp(App):
+input_helper = """
+MDTextField:
+    hint_text: "Enter text"
+    multiline:False
+"""
+class MyApp(MDApp):
     def build(self):
         # window title
         self.title = "Eat Money"
@@ -44,8 +59,11 @@ class MyApp(App):
 
         # reads in old data from csv upon build start
         # stores Food objects in food_list
+        self._daily_spent = 0.00
+        self._daily_cals = 0
         self._food_list = []
         self.read_old_data()
+        self.calc_old_data_daily()
 
         # boolean variable to switch between food and cost entry
         # its basically an easy way to track which entry field is
@@ -79,17 +97,34 @@ class MyApp(App):
 
         self.date = Label(
             text=self._today.strftime("%B %d, %Y"),
-            font_size=45,
+            font_size=35,
             color='#8CA262',
             halign='center'
         )
         self.window.add_widget(self.date)
 
-        # text input widget for user input
-        self.input_field = TextInput(
-            multiline=False,
-            size_hint=(1, 0.5)
+        #add daily calories label
+        self.cal_disp = Label(
+            text="Daily Calories: ".ljust(30) + "%s" % str(self._daily_cals),
+            font_size=40,
+            size_hint=(1, 0.5),
+            color='#8CA262',
+            halign='left'
         )
+        self.window.add_widget(self.cal_disp)
+
+        #add daily spent label
+        self.spent_disp = Label(
+            text="Daily Spent: ".ljust(30) + "$%s" % str(self._daily_spent),
+            font_size=40,
+            size_hint=(1, 0.5),
+            color='#8CA262',
+            halign='left'
+        )
+        self.window.add_widget(self.spent_disp)
+
+        # text input widget for user input
+        self.input_field = Builder.load_string(input_helper)
         self.window.add_widget(self.input_field)
 
         # button widget to submit text entry
@@ -204,6 +239,15 @@ class MyApp(App):
             self.infobox.text = "please enter a valid cost!"
             return False
 
+    def calc_old_data_daily(self):
+        for food in reversed(self._food_list):
+            if int(food.get_date()[8:10]) == int(date.today().day):
+                self._daily_spent += float(food.get_cost())
+                self._daily_cals += float(food.get_calories())
+
+    def update_daily_disp(self):
+        self.cal_disp.text = "Daily Calories: ".ljust(30) + "%s" % str(self._daily_cals)
+        self.spent_disp.text = "Daily Spent:".ljust(30) + "$ %s" % str(self._daily_spent)
     # this function corresponds to the behavior when we click
     # the topmost button (its name will change upon selection,
     # so I've decided to call it "big button")
@@ -226,15 +270,29 @@ class MyApp(App):
                 self._first_click = False
 
                 # add Food object
-                db_name, calories, carbs, protein, fat, sugar, sodium = find_food_data(self._curr_name)
-                if calories != -1:
-                    curr_food = Food(self._today.strftime("%Y-%m-%d"), db_name, self._curr_cost, calories, carbs, protein, fat, sugar, sodium)
-                    data_entry = [self._today.strftime("%Y-%m-%d"), db_name, self._curr_cost, calories, carbs, protein, fat, sugar, sodium]
-                    self.infobox.text = self._curr_name + " ($" + self._curr_cost + ") added successfully!"
-                    self._food_list.append(curr_food)
-                    self.add_new_data(data_entry)
+                food_list = find_food_data(self._curr_name, self._today.strftime("%Y-%m-%d"), self._curr_cost)
+                menu_text = ""
+                #check if list is empty
+                if len(food_list) == 0:
+                    menu_text += "unable to locate " + self._curr_name + " in database!"
                 else:
-                    self.infobox.text = "unable to locate " + self._curr_name + " in database!"
+                    for item in food_list:
+                        data_entry = [self._today.strftime("%Y-%m-%d"), item.get_name(), self._curr_cost, item.get_calories(), item.get_carbs(), item.get_protein(), item.get_fat(), item.get_sugar(), item.get_sodium()]
+                        self.add_new_data(data_entry)
+                        self._food_list.append(item)
+                        self._daily_cals += float(item.get_calories())
+                        self._daily_spent += float(item.get_cost())
+                        menu_text += item.get_name() + " ($" + self._curr_cost + ") added successfully!" + "\n"
+                self.infobox.text = menu_text
+                #self.infobox.text = self._curr_name + " ($" + self._curr_cost + ") added successfully!"
+                    # if calories != -1:
+                    #     curr_food = Food(self._today.strftime("%Y-%m-%d"), db_name, self._curr_cost, calories, carbs, protein, fat, sugar, sodium)
+                    #     data_entry = [self._today.strftime("%Y-%m-%d"), db_name, self._curr_cost, calories, carbs, protein, fat, sugar, sodium]
+                    #     self.infobox.text = self._curr_name + " ($" + self._curr_cost + ") added successfully!"
+                    #     self._food_list.append(curr_food)
+                    #     self.add_new_data(data_entry)
+                    # else:
+                    #     self.infobox.text = "unable to locate " + self._curr_name + " in database!"
         else:
             if self.input_field.text == "":
                 self.infobox.text = "please enter a valid name!"
@@ -244,6 +302,7 @@ class MyApp(App):
                 self.infobox.text = "please enter the cost of " + self._curr_name
                 self._first_click = True
         self.input_field.text = ""
+        self.update_daily_disp()
 
     # since we don't yet officially have a "reset" button,
     # this function seeks to emulate that behavior; it will be
@@ -265,7 +324,6 @@ class MyApp(App):
         total_fat = 0
         total_sugar = 0
         total_sodium = 0
-
 
         if self._curr_unit == self._units[0]:
             date_comparison_value = self._today.day
@@ -417,46 +475,34 @@ class MyApp(App):
         self.save_preferences()
         self.view_stats_button("new")
 
-    def history_helper(self, entry):
-        popup_header = Label(
-            text=entry,
-            size_hint_y=None,
-            font_size=24,
-            color='#FFFFFF',
-            halign='left'
-        )
-        return popup_header
-
     # view history by date:
     def view_history_button(self, instance):
         self.reset_user_entry()
 
-        popup_layout = GridLayout(cols=1, size_hint_y=None)
-        popup_layout.bind(minimum_height=popup_layout.setter('height'))
+        scroll = ScrollView(size_hint=(1, None), size=(700, 570))
+        # retrieves item information from food list. adds each item as its own text widget
+        history_list = []
+        for item in self._food_list:
+            history_list.append((item.get_date(),item.get_name(),item.get_calories(),"$%s"%item.get_cost(), item.get_carbs(), item.get_protein(), item.get_fat(), item.get_sugar(), item.get_sodium()))
 
-        # retrienves item information from food list. adds each item as its own text widget
-        if (len(self._food_list) > 0):
-            recent_date = self._food_list[0].get_date()
-            history = recent_date + "\n"
-            popup_layout.add_widget(self.history_helper(history))
-
-            for i in self._food_list:
-                if (i.get_date() != recent_date):
-                    history = i.get_date() + "\n"
-                    recent_date = i.get_date()
-                history = "%s$%s%s calories" % (
-                str(i.get_name()).ljust(25), str(i.get_cost()).ljust(25), str(i.get_calories()))
-                popup_layout.add_widget(self.history_helper(history))
-        else:
-            history = "No entries to date!"
-            popup_layout.add_widget(self.history_helper(history))
-
+        table = MDDataTable(column_data=[
+            ("Date", dp(20)),
+            ("Food", dp(25)),
+            ("Calories", dp(20)),
+            ("Cost", dp(15)),
+            ("Carbs",dp(20)),
+            ("Protein",dp(20)),
+            ("Fat", dp(20)),
+            ("Sugar", dp(20)),
+            ("Sodium", dp(20))
+        ],
+        row_data = history_list
+        )
+        scroll.add_widget(table)
         # makes the widgets scrollable
-        root = ScrollView(size_hint=(1, None), size=(700, 550))
-        root.add_widget(popup_layout)
         popup = Popup(title='History',
-                      content=root,
-                      size_hint=(None, None), size=(700, 700))
+                      content=scroll,
+                      size_hint=(None, None), size=(950, 700))
         popup.open()
 
     def change_theme_button(self, instance):
