@@ -129,6 +129,7 @@ class MyApp(MDApp):
 
         # text input widget for user input
         self.input_field = Builder.load_string(input_helper)
+        self.input_field.focus = True
         self.window.add_widget(self.input_field)
 
         # button widget to submit text entry
@@ -516,6 +517,7 @@ class MyApp(MDApp):
 
     def change_theme_button(self, instance):
         self.reset_user_entry()
+        self.md_helper("idk")
         if self._light_theme:
             Window.clearcolor = (0, 0, 0, 0)
             if instance != "new":
