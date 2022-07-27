@@ -39,8 +39,11 @@ class Food:
     def get_sodium(self):
         return self._sodium
 
+    def set_cost(self, cost):
+        self._cost = cost
+
     name = property(get_name)
-    cost = property(get_cost)
+    cost = property(get_cost, set_cost)
     calories = property(get_calories)
     carbs = property(get_carbs)
     protein = property(get_protein)

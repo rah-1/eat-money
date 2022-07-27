@@ -27,6 +27,7 @@ from kivy.config import Config
 from kivy.uix.popup import Popup
 from kivy.core.window import Window
 from kivy.uix.scrollview import ScrollView
+from kivy.clock import Clock
 from kivy.app import runTouchApp
 
 
@@ -37,9 +38,10 @@ Config.set('graphics', 'resizable', True)
 
 input_helper = """
 MDTextField:
-    hint_text: "Enter text"
+    hint_text: "Enter info"
     multiline:False
 """
+
 class MyApp(MDApp):
     def build(self):
         Window.bind(on_keyboard=self.dismiss_popup_key_press)
@@ -99,31 +101,31 @@ class MyApp(MDApp):
 
         self.date = Label(
             text=self._today.strftime("%B %d, %Y"),
-            font_size=35,
+            font_size=20,
             color='#8CA262',
             halign='center'
         )
         self.window.add_widget(self.date)
 
-        #add daily calories label
-        self.cal_disp = Label(
-            text="Daily Calories: ".ljust(30) + "%s" % str(self._daily_cals),
-            font_size=25,
-            size_hint=(1, 0.5),
-            color='#8CA262',
-            halign='left'
-        )
-        self.window.add_widget(self.cal_disp)
-
-        #add daily spent label
+        # add daily spent label
         self.spent_disp = Label(
-            text="Daily Spent: ".ljust(30) + "$%s" % str(self._daily_spent),
+            text="Daily Spending: ".ljust(30) + "$" + "{0:00.2f}".format(round(self._daily_spent, 2)),
             font_size=25,
             size_hint=(1, 0.5),
             color='#8CA262',
             halign='left'
         )
         self.window.add_widget(self.spent_disp)
+
+        #add daily calories label
+        self.cal_disp = Label(
+            text="Daily Calories: ".ljust(30) + str(round(self._daily_cals,1)) + " cals",
+            font_size=25,
+            size_hint=(1, 0.5),
+            color='#8CA262',
+            halign='left'
+        )
+        self.window.add_widget(self.cal_disp)
 
         # text input widget for user input
         self.input_field = Builder.load_string(input_helper)
@@ -179,6 +181,8 @@ class MyApp(MDApp):
         self.window.add_widget(self.infobox)
 
         self.remember_preference()
+
+        self.input_field.bind(on_text_validate=lambda x: self.big_button_press("idk"))
 
         return self.window
 
@@ -257,8 +261,12 @@ class MyApp(MDApp):
                 self._daily_cals += float(food.get_calories())
 
     def update_daily_disp(self):
-        self.cal_disp.text = "Daily Calories: ".ljust(30) + "%s" % str(self._daily_cals)
-        self.spent_disp.text = "Daily Spent:".ljust(30) + "$ %s" % str(self._daily_spent)
+        self.cal_disp.text = "Daily Calories: ".ljust(30) + str(round(self._daily_cals,1)) + " cals"
+        self.spent_disp.text = "Daily Spending: ".ljust(30) + "$" + "{0:00.2f}".format(round(self._daily_spent, 2))
+
+    def md_helper(self, idk):
+        self.input_field.focus = True
+
     # this function corresponds to the behavior when we click
     # the topmost button (its name will change upon selection,
     # so I've decided to call it "big button")
@@ -283,27 +291,24 @@ class MyApp(MDApp):
                 # add Food object
                 food_list = find_food_data(self._curr_name, self._today.strftime("%Y-%m-%d"), self._curr_cost)
                 menu_text = ""
-                #check if list is empty
+                # check if list is empty
                 if len(food_list) == 0:
-                    menu_text += "unable to locate " + self._curr_name + " in database!"
+                    self.infobox.text = "unable to locate " + self._curr_name + " in database!"
                 else:
                     for item in food_list:
-                        data_entry = [self._today.strftime("%Y-%m-%d"), item.get_name(), self._curr_cost, item.get_calories(), item.get_carbs(), item.get_protein(), item.get_fat(), item.get_sugar(), item.get_sodium()]
+                        item.cost = round(float(self._curr_cost) / len(food_list), 2)
+                        data_entry = [self._today.strftime("%Y-%m-%d"), item.get_name(), item.get_cost(),
+                                      item.get_calories(), item.get_carbs(), item.get_protein(), item.get_fat(),
+                                      item.get_sugar(), item.get_sodium()]
+
                         self.add_new_data(data_entry)
                         self._food_list.append(item)
                         self._daily_cals += float(item.get_calories())
                         self._daily_spent += float(item.get_cost())
-                        menu_text += item.get_name() + " ($" + self._curr_cost + ") added successfully!" + "\n"
-                self.infobox.text = menu_text
-                #self.infobox.text = self._curr_name + " ($" + self._curr_cost + ") added successfully!"
-                    # if calories != -1:
-                    #     curr_food = Food(self._today.strftime("%Y-%m-%d"), db_name, self._curr_cost, calories, carbs, protein, fat, sugar, sodium)
-                    #     data_entry = [self._today.strftime("%Y-%m-%d"), db_name, self._curr_cost, calories, carbs, protein, fat, sugar, sodium]
-                    #     self.infobox.text = self._curr_name + " ($" + self._curr_cost + ") added successfully!"
-                    #     self._food_list.append(curr_food)
-                    #     self.add_new_data(data_entry)
-                    # else:
-                    #     self.infobox.text = "unable to locate " + self._curr_name + " in database!"
+                        menu_text += (item.get_name() + ", ")
+                    menu_text = menu_text[0:len(menu_text) - 2]
+                    self.infobox.text = menu_text + " ($" + self._curr_cost + ") added successfully!"
+
         else:
             if self.input_field.text == "":
                 self.infobox.text = "please enter a valid name!"
@@ -314,6 +319,8 @@ class MyApp(MDApp):
                 self._first_click = True
         self.input_field.text = ""
         self.update_daily_disp()
+
+        Clock.schedule_once(self.md_helper)
 
     # since we don't yet officially have a "reset" button,
     # this function seeks to emulate that behavior; it will be
