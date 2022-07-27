@@ -91,7 +91,7 @@ class MyApp(MDApp):
         # also, color scheme/theme can be changed... preferences?
         self.header = Label(
             text="eat money",
-            font_size=95,
+            font_size=85,
             color='#8CA262',
             halign='center'
         )
@@ -99,7 +99,7 @@ class MyApp(MDApp):
 
         self.date = Label(
             text=self._today.strftime("%B %d, %Y"),
-            font_size=35,
+            font_size=20,
             color='#8CA262',
             halign='center'
         )
@@ -108,7 +108,7 @@ class MyApp(MDApp):
         #add daily calories label
         self.cal_disp = Label(
             text="Daily Calories: ".ljust(30) + "%s" % str(self._daily_cals),
-            font_size=40,
+            font_size=25,
             size_hint=(1, 0.5),
             color='#8CA262',
             halign='left'
@@ -118,7 +118,7 @@ class MyApp(MDApp):
         #add daily spent label
         self.spent_disp = Label(
             text="Daily Spent: ".ljust(30) + "$%s" % str(self._daily_spent),
-            font_size=40,
+            font_size=25,
             size_hint=(1, 0.5),
             color='#8CA262',
             halign='left'
@@ -172,7 +172,7 @@ class MyApp(MDApp):
         # ex. if user input is invalid/successful
         self.infobox = Label(
             text="welcome to eat money!",
-            font_size=35,
+            font_size=25,
             color='#8CA262',
             halign='center'
         )
@@ -481,30 +481,31 @@ class MyApp(MDApp):
     def view_history_button(self, instance):
         self.reset_user_entry()
 
-        scroll = ScrollView(size_hint=(1, None), size=(700, 570))
         # retrieves item information from food list. adds each item as its own text widget
         history_list = []
         for item in self._food_list:
             history_list.append((item.get_date(),item.get_name(),item.get_calories(),"$%s"%item.get_cost(), item.get_carbs(), item.get_protein(), item.get_fat(), item.get_sugar(), item.get_sodium()))
 
-        table = MDDataTable(column_data=[
-            ("Date", dp(20)),
-            ("Food", dp(25)),
-            ("Calories", dp(20)),
-            ("Cost", dp(15)),
-            ("Carbs",dp(20)),
-            ("Protein",dp(20)),
-            ("Fat", dp(20)),
-            ("Sugar", dp(20)),
-            ("Sodium", dp(20))
-        ],
+        table = MDDataTable(pos_hint={'center_x':0.5,'center_y':0.5},
+                            column_data=[
+                                ("Date", dp(20)),
+                                ("Food", dp(25)),
+                                ("Calories", dp(20)),
+                                ("Cost", dp(15)),
+                                ("Carbs",dp(20)),
+                                ("Protein",dp(20)),
+                                ("Fat", dp(20)),
+                                ("Sugar", dp(20)),
+                                ("Sodium", dp(20))
+                            ],
         row_data = history_list
         )
+        scroll = ScrollView(size_hint=(1, 1), size=(500, 550))
         scroll.add_widget(table)
         # makes the widgets scrollable
         popup = Popup(title='History',
                       content=scroll,
-                      size_hint=(None, None), size=(950, 700))
+                      size_hint=(None, None), size=(500, 400))
         popup.open()
 
     def change_theme_button(self, instance):
