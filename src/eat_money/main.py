@@ -237,15 +237,25 @@ class MyApp(App):
                 self._first_click = False
 
                 # add Food object
-                db_name, calories, carbs, protein, fat, sugar, sodium = find_food_data(self._curr_name)
-                if calories != -1:
-                    curr_food = Food(self._today.strftime("%Y-%m-%d"), db_name, self._curr_cost, calories, carbs, protein, fat, sugar, sodium)
-                    data_entry = [self._today.strftime("%Y-%m-%d"), db_name, self._curr_cost, calories, carbs, protein, fat, sugar, sodium]
-                    self.infobox.text = self._curr_name + " ($" + self._curr_cost + ") added successfully!"
-                    self._food_list.append(curr_food)
-                    self.add_new_data(data_entry)
-                else:
+                # add Food object
+                food_list = find_food_data(self._curr_name, self._today.strftime("%Y-%m-%d"), self._curr_cost)
+                menu_text = ""
+                # check if list is empty
+                if len(food_list) == 0:
                     self.infobox.text = "unable to locate " + self._curr_name + " in database!"
+                else:
+                    for item in food_list:
+                        data_entry = [self._today.strftime("%Y-%m-%d"), item.get_name(), self._curr_cost,
+                                      item.get_calories(), item.get_carbs(), item.get_protein(), item.get_fat(),
+                                      item.get_sugar(), item.get_sodium()]
+                        self.add_new_data(data_entry)
+                        self._food_list.append(item)
+                        #self._daily_cals += float(item.get_calories())
+                        #self._daily_spent += float(item.get_cost())
+                        menu_text += (item.get_name() + ", ")
+                menu_text = menu_text[0:len(menu_text)-2]
+                self.infobox.text = menu_text + " ($" + self._curr_cost + ") added successfully!"
+
         else:
             if self.input_field.text == "":
                 self.infobox.text = "please enter a valid name!"
