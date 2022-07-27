@@ -164,8 +164,8 @@ class MyApp(App):
         if len(prefs_dict) == 2:
             if prefs_dict["theme"] == "dark":
                 self.change_theme_button("new")
-            if prefs_dict["unit"] in self._units:
-                self._curr_unit = prefs_dict["unit"]
+            if prefs_dict["unit"].title() in self._units:
+                self._curr_unit = prefs_dict["unit"].title()
 
     def save_preferences(self):
         if self._light_theme:
