@@ -29,6 +29,7 @@ from kivy.config import Config
 from kivy.uix.popup import Popup
 from kivy.core.window import Window
 from kivy.uix.scrollview import ScrollView
+from kivy.clock import Clock
 from kivy.app import runTouchApp
 
 
@@ -39,8 +40,8 @@ Config.set('graphics', 'resizable', True)
 
 input_helper = """
 MDTextField:
-    hint_text: "Enter text"
-    multiline:False
+    hint_text: "Enter info"
+    multiline: False
 """
 
 class MyApp(MDApp):
@@ -109,19 +110,10 @@ class MyApp(MDApp):
         self.window.add_widget(self.date)
 
         # todo: reformat daily fields and pad decimals
-        # add daily calories label
-        self.cal_disp = Label(
-            text="Daily Calories: ".ljust(30) + "%s" % str(self._daily_cals).format("{0:0.##}"),
-            font_size=25,
-            size_hint=(1, 0.5),
-            color='#8CA262',
-            halign='left'
-        )
-        self.window.add_widget(self.cal_disp)
 
         # add daily spent label
         self.spent_disp = Label(
-            text="Daily Spending: ".ljust(30) + "$%s" % str(self._daily_spent).format("{0:0.##}"),
+            text="Daily Spending: ".ljust(30) + "$" + "{0:06.2f}".format(round(self._daily_spent, 2)),
             font_size=25,
             size_hint=(1, 0.5),
             color='#8CA262',
@@ -129,11 +121,19 @@ class MyApp(MDApp):
         )
         self.window.add_widget(self.spent_disp)
 
-        # text input widget for user input
-        self.input_field = TextInput(
-            multiline=False,
-            size_hint=(1, 0.5)
+        # add daily calories label
+        self.cal_disp = Label(
+            text="Daily Calories: ".ljust(30) + str(round(self._daily_cals,1)) + " cals",
+            font_size=25,
+            size_hint=(1, 0.5),
+            color='#8CA262',
+            halign='left'
         )
+        self.window.add_widget(self.cal_disp)
+
+
+        # text input widget for user input
+        self.input_field = Builder.load_string(input_helper)
         self.window.add_widget(self.input_field)
 
         # button widget to submit text entry
@@ -186,6 +186,8 @@ class MyApp(MDApp):
         self.window.add_widget(self.infobox)
 
         self.remember_preference()
+
+        self.input_field.bind(on_text_validate=lambda x:self.big_button_press("idk"))
 
         return self.window
 
@@ -263,9 +265,13 @@ class MyApp(MDApp):
                 self._daily_spent += float(food.get_cost())
                 self._daily_cals += float(food.get_calories())
 
+    # todo: ensure this displays the same way as initial disp
     def update_daily_disp(self):
-        self.cal_disp.text = "Daily Calories: ".ljust(30) + "%s" % str(self._daily_cals)
-        self.spent_disp.text = "Daily Spent:".ljust(30) + "$ %s" % str(self._daily_spent)
+        self.cal_disp.text = "Daily Calories: ".ljust(30) + str(round(self._daily_cals,1)) + " cals"
+        self.spent_disp.text = "Daily Spending: ".ljust(30) + "$" + "{0:06.2f}".format(round(self._daily_spent, 2))
+
+    def md_helper(self, idk):
+        self.input_field.focus = True
 
     # this function corresponds to the behavior when we click
     # the topmost button (its name will change upon selection,
@@ -305,8 +311,8 @@ class MyApp(MDApp):
                         self._daily_cals += float(item.get_calories())
                         self._daily_spent += float(item.get_cost())
                         menu_text += (item.get_name() + ", ")
-                menu_text = menu_text[0:len(menu_text)-2]
-                self.infobox.text = menu_text + " ($" + self._curr_cost + ") added successfully!"
+                    menu_text = menu_text[0:len(menu_text)-2]
+                    self.infobox.text = menu_text + " ($" + self._curr_cost + ") added successfully!"
 
         else:
             if self.input_field.text == "":
@@ -318,6 +324,7 @@ class MyApp(MDApp):
                 self._first_click = True
         self.input_field.text = ""
         self.update_daily_disp()
+        Clock.schedule_once(self.md_helper)
 
     # since we don't yet officially have a "reset" button,
     # this function seeks to emulate that behavior; it will be
@@ -527,16 +534,16 @@ class MyApp(MDApp):
     def change_theme_button(self, instance):
         self.reset_user_entry()
         if self._light_theme:
-            Window.clearcolor = (0, 0, 0, 0)
+            #Window.clearcolor = (0, 0, 0, 0)
             if instance != "new":
                 self.infobox.text = "applied dark theme!"
-            else:
-                self.theme_cls.theme_style = "Dark"
+            self.theme_cls.theme_style = "Dark"
             self._light_theme = False
         else:
-            Window.clearcolor = (1, 1, 1, 1)
+            #Window.clearcolor = (1, 1, 1, 1)
             self._light_theme = True
             self.infobox.text = "applied light theme!"
+            self.theme_cls.theme_style = "Light"
         self.save_preferences()
 
 
