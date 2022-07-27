@@ -108,7 +108,7 @@ class MyApp(MDApp):
         #add daily calories label
         self.cal_disp = Label(
             text="Daily Calories: ".ljust(30) + "%s" % str(self._daily_cals),
-            font_size=40,
+            font_size=25,
             size_hint=(1, 0.5),
             color='#8CA262',
             halign='left'
@@ -118,7 +118,7 @@ class MyApp(MDApp):
         #add daily spent label
         self.spent_disp = Label(
             text="Daily Spent: ".ljust(30) + "$%s" % str(self._daily_spent),
-            font_size=40,
+            font_size=25,
             size_hint=(1, 0.5),
             color='#8CA262',
             halign='left'
@@ -513,11 +513,13 @@ class MyApp(MDApp):
             Window.clearcolor = (0, 0, 0, 0)
             if instance != "new":
                 self.infobox.text = "applied dark theme!"
+            self.theme_cls.theme_style = "Dark"
             self._light_theme = False
         else:
             Window.clearcolor = (1, 1, 1, 1)
             self._light_theme = True
             self.infobox.text = "applied light theme!"
+            self.theme_cls.theme_style = "Light"
         self.save_preferences()
 
 
