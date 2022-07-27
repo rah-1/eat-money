@@ -44,6 +44,7 @@ MDTextField:
     multiline: False
 """
 
+
 class MyApp(MDApp):
     def build(self):
         Window.bind(on_keyboard=self.dismiss_popup_key_press)
@@ -67,6 +68,7 @@ class MyApp(MDApp):
         # stores Food objects in food_list
         self._daily_spent = 0.00
         self._daily_cals = 0.0
+
         self._food_list = []
         self.read_old_data()
         self.calc_old_data_daily()
@@ -120,7 +122,7 @@ class MyApp(MDApp):
             halign='left'
         )
         self.window.add_widget(self.spent_disp)
-
+        
         # add daily calories label
         self.cal_disp = Label(
             text="Daily Calories: ".ljust(30) + str(round(self._daily_cals,1)) + " cals",
@@ -273,6 +275,7 @@ class MyApp(MDApp):
     def md_helper(self, idk):
         self.input_field.focus = True
 
+
     # this function corresponds to the behavior when we click
     # the topmost button (its name will change upon selection,
     # so I've decided to call it "big button")
@@ -294,7 +297,7 @@ class MyApp(MDApp):
                 self._curr_cost = self.input_field.text
                 self._first_click = False
 
-                # add Food object
+               
                 # add Food object
                 food_list = find_food_data(self._curr_name, self._today.strftime("%Y-%m-%d"), self._curr_cost)
                 menu_text = ""
@@ -306,6 +309,7 @@ class MyApp(MDApp):
                         data_entry = [self._today.strftime("%Y-%m-%d"), item.get_name(), self._curr_cost,
                                       item.get_calories(), item.get_carbs(), item.get_protein(), item.get_fat(),
                                       item.get_sugar(), item.get_sodium()]
+
                         self.add_new_data(data_entry)
                         self._food_list.append(item)
                         self._daily_cals += float(item.get_calories())
@@ -324,7 +328,9 @@ class MyApp(MDApp):
                 self._first_click = True
         self.input_field.text = ""
         self.update_daily_disp()
+        
         Clock.schedule_once(self.md_helper)
+
 
     # since we don't yet officially have a "reset" button,
     # this function seeks to emulate that behavior; it will be
@@ -346,7 +352,6 @@ class MyApp(MDApp):
         total_fat = 0
         total_sugar = 0
         total_sodium = 0
-
 
         if self._curr_unit == self._units[0]:
             date_comparison_value = self._today.day
@@ -489,16 +494,6 @@ class MyApp(MDApp):
         self.save_preferences()
         self.view_stats_button("new")
 
-    def history_helper(self, entry):
-        popup_header = Label(
-            text=entry,
-            size_hint_y=None,
-            font_size=24,
-            color='#FFFFFF',
-            halign='left'
-        )
-        return popup_header
-
     # view history by date:
     def view_history_button(self, instance):
         self.reset_user_entry()
@@ -510,6 +505,7 @@ class MyApp(MDApp):
             history_list.append((item.get_date(), item.get_name(), item.get_calories(), "$%s" % item.get_cost(),
                                  item.get_carbs(), item.get_protein(), item.get_fat(), item.get_sugar(),
                                  item.get_sodium()))
+
 
         table = MDDataTable(column_data=[
             ("Date", dp(20)),
