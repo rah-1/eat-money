@@ -203,7 +203,7 @@ class MyApp(MDApp):
     # side-note: kivy closes the main window when ESC is pressed normally
     def dismiss_popup_key_press(self, key, scancode, codepoint, modifiers, idk):
         if isinstance(App.get_running_app().root_window.children[0], Popup):
-            if scancode == 13 or scancode == 27 or scancode == 32:
+            if scancode == 27 or scancode == 32:
                 App.get_running_app().root_window.children[0].dismiss()
 
 
@@ -509,7 +509,7 @@ class MyApp(MDApp):
         popup_layout_new = GridLayout(cols=1)
 
         popup_total_header = Label(
-            text="Recommended daily intake (BMR):",
+            text="Recommended Daily Intake (BMR):",
             underline=True,
             font_size=24,
             color='#FFFFFF',
@@ -523,7 +523,7 @@ class MyApp(MDApp):
             halign='center'
         )
         popup_remaining_header = Label(
-            text="Calories remaining:",
+            text="Calories Remaining:",
             underline=True,
             font_size=24,
             color='#FFFFFF',
@@ -536,18 +536,28 @@ class MyApp(MDApp):
             color='#FFFFFF',
             halign='center'
         )
-        age_input_field = Builder.load_string("""MDTextField:
+        self.age_input_field = Builder.load_string("""MDTextField:
             hint_text: "Enter age"
             multiline: False""")
-        ht_input_field = Builder.load_string("""MDTextField:
+        self.ht_input_field = Builder.load_string("""MDTextField:
                     hint_text: "Enter height (cm)"
                     multiline: False""")
-        wt_input_field = Builder.load_string("""MDTextField:
+        self.wt_input_field = Builder.load_string("""MDTextField:
                     hint_text: "Enter weight (kg)"
                     multiline: False""")
-        sex_input_field = Builder.load_string("""MDTextField:
+        self.sex_input_field = Builder.load_string("""MDTextField:
                     hint_text: "Enter sex (m/f)"
                     multiline: False""")
+
+        self.popup_rec_status = Label(
+            text="View and update recommended daily intake here",
+            font_size=16,
+            color='#FFFFFF',
+            halign='center'
+        )
+
+        if instance == "new":
+            self.popup_rec_status.text = "Updated user information successfully!"
 
         popup_update_button = Button(
             text="UPDATE USER INFO",
@@ -555,17 +565,17 @@ class MyApp(MDApp):
             bold=True,
             background_color='#C19ADD',
         )
-        #popup_update_button.bind(on_release=self.rotate_units)
+        popup_update_button.bind(on_release=self.update_user_info)
 
         popup_layout_new.add_widget(popup_total_header)
         popup_layout_new.add_widget(popup_total)
         popup_layout_new.add_widget(popup_remaining_header)
         popup_layout_new.add_widget(popup_remaining)
-        popup_layout_new.add_widget(age_input_field)
-        popup_layout_new.add_widget(ht_input_field)
-        popup_layout_new.add_widget(wt_input_field)
-        popup_layout_new.add_widget(sex_input_field)
-
+        popup_layout_new.add_widget(self.age_input_field)
+        popup_layout_new.add_widget(self.ht_input_field)
+        popup_layout_new.add_widget(self.wt_input_field)
+        popup_layout_new.add_widget(self.sex_input_field)
+        popup_layout_new.add_widget(self.popup_rec_status)
         popup_layout_new.add_widget(popup_update_button)
 
         self._rec_popup = Popup(title='Recommended Caloric Intake (ESC to close)',
@@ -573,6 +583,31 @@ class MyApp(MDApp):
                                   size_hint=(None, None), size=(500, 550))
 
         self._rec_popup.open()
+
+    def update_user_info(self, idk):
+        move_forward = True
+        if not self.check_valid_cost(self.age_input_field.text, False):
+            move_forward = False
+            self.age_input_field.text = ""
+        if not self.check_valid_cost(self.ht_input_field.text, False):
+            move_forward = False
+            self.ht_input_field.text = ""
+        if not self.check_valid_cost(self.wt_input_field.text, False):
+            move_forward = False
+            self.wt_input_field.text = ""
+        if self.sex_input_field.text.lower() != 'm' and self.sex_input_field.text.lower() != 'f':
+            move_forward = False
+            self.sex_input_field.text = ""
+
+        if not move_forward:
+            self.popup_rec_status.text = "Please enter valid user information!"
+        else:
+            self._age = float(self.age_input_field.text)
+            self._heightcm = float(self.ht_input_field.text)
+            self._weightkg = float(self.wt_input_field.text)
+            self._sex = self.sex_input_field.text.lower()
+            self.save_preferences()
+            self.view_rec_button("new")
 
     def rotate_units(self, instance):
         curr_pos = self._units.index(self._curr_unit)
