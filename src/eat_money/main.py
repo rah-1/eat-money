@@ -57,9 +57,14 @@ class MyApp(MDApp):
         self._curr_cost = ""
 
         # units of time available
-        # in the future, want the ability to "remember" preferences
         self._units = ["Daily", "Weekly", "Monthly", "Annual"]
         self._curr_unit = self._units[0]
+
+        # default assignment for BMR values
+        self._age = 25
+        self._heightcm = 180
+        self._weightkg = 75
+        self._sex = "m"
 
         # reads in old data from csv upon build start
         # stores Food objects in food_list
@@ -201,17 +206,29 @@ class MyApp(MDApp):
             prefs_dict = json.load(r_prefs)
 
         # currently hardcoded for num of preferences (2)
-        if len(prefs_dict) == 2:
+        if len(prefs_dict) == 6:
             if prefs_dict["theme"] == "dark":
                 self.change_theme_button("new")
             if prefs_dict["unit"] in self._units:
                 self._curr_unit = prefs_dict["unit"]
+            if self.check_valid_cost(prefs_dict["age"], False):
+                self._age = prefs_dict["age"]
+            if self.check_valid_cost(prefs_dict["height"], False):
+                self._heightcm = prefs_dict["height"]
+            if self.check_valid_cost(prefs_dict["weight"], False):
+                self._weightkg = prefs_dict["weight"]
+            if prefs_dict["sex"] == "f":
+                self._sex = "f"
 
     def save_preferences(self):
         if self._light_theme:
-            prefs_dict = {"theme": "light", "unit": self._curr_unit.lower()}
+            prefs_dict = {"theme": "light", "unit": self._curr_unit.lower(),
+                          "age": self._age, "height": self._heightcm,
+                          "weight": self._weightkg, "sex": self._sex}
         else:
-            prefs_dict = {"theme": "dark", "unit": self._curr_unit.lower()}
+            prefs_dict = {"theme": "dark", "unit": self._curr_unit.lower(),
+                          "age": self._age, "height": self._heightcm,
+                          "weight": self._weightkg, "sex": self._sex}
         with open('preferences.json', 'w') as w_prefs:
             json.dump(prefs_dict, w_prefs, indent=4)
 
@@ -247,12 +264,13 @@ class MyApp(MDApp):
 
     # input validation for cost field entry
     # checks whether a valid float was entered
-    def check_valid_cost(self, entry):
+    def check_valid_cost(self, entry, usage):
         try:
             cost = float(entry)
             return True
         except ValueError:
-            self.infobox.text = "please enter a valid cost!"
+            if usage:
+                self.infobox.text = "please enter a valid cost!"
             return False
 
     def calc_old_data_daily(self):
@@ -284,7 +302,7 @@ class MyApp(MDApp):
         # this first (if) block runs when we are at the submit cost menu
         # the second (else) block runs when we are at the submit food menu
         if self._first_click:
-            if self.check_valid_cost(self.input_field.text):
+            if self.check_valid_cost(self.input_field.text, True):
                 self.submit_button.text = "SUBMIT FOOD"
                 self._curr_cost = self.input_field.text
                 self._first_click = False
