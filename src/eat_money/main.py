@@ -36,12 +36,6 @@ import csv
 
 Config.set('graphics', 'resizable', True)
 
-input_helper = """
-MDTextField:
-    hint_text: "Enter info"
-    multiline:False
-"""
-
 class MyApp(MDApp):
     def build(self):
         Window.bind(on_keyboard=self.dismiss_popup_key_press)
@@ -133,7 +127,9 @@ class MyApp(MDApp):
         self.window.add_widget(self.cal_disp)
 
         # text input widget for user input
-        self.input_field = Builder.load_string(input_helper)
+        self.input_field = Builder.load_string("""MDTextField:
+            hint_text: "Enter info"
+            multiline: False""")
         self.input_field.focus = True
         self.window.add_widget(self.input_field)
 
@@ -166,6 +162,16 @@ class MyApp(MDApp):
         )
         self.history_button.bind(on_release=self.view_history_button)
         self.window.add_widget(self.history_button)
+
+        # button widget for recommended caloric intake
+        self.rec_button = Button(
+            text="CALORIC RECOMMENDATIONS",
+            size_hint=(1, 0.5),
+            bold=True,
+            background_color='#C19ADD',
+        )
+        self.rec_button.bind(on_release=self.view_rec_button)
+        self.window.add_widget(self.rec_button)
 
         self.theme_button = Button(
             text="CHANGE THEME",
@@ -487,11 +493,86 @@ class MyApp(MDApp):
         popup_layout.add_widget(popup_sugar)
         popup_layout.add_widget(popup_sodium)
 
-        self._stats_popup = Popup(title='User Statistics',
+        self._stats_popup = Popup(title='User Statistics (ESC to close)',
                                   content=popup_layout,
                                   size_hint=(None, None), size=(400, 550))
 
         self._stats_popup.open()
+
+    def view_rec_button(self, instance):
+        if instance == "new":
+            self._rec_popup.dismiss()
+        self.reset_user_entry()
+
+        bmr = self.bmr(self._age, self._heightcm, self._weightkg, self._sex)
+
+        popup_layout_new = GridLayout(cols=1)
+
+        popup_total_header = Label(
+            text="Recommended daily intake (BMR):",
+            underline=True,
+            font_size=24,
+            color='#FFFFFF',
+            halign='center'
+        )
+        popup_total = Label(
+            bold=True,
+            text="{:.1f}".format(bmr) + " cals",
+            font_size=40,
+            color='#FFFFFF',
+            halign='center'
+        )
+        popup_remaining_header = Label(
+            text="Calories remaining:",
+            underline=True,
+            font_size=24,
+            color='#FFFFFF',
+            halign='center'
+        )
+        popup_remaining = Label(
+            bold=True,
+            text="{:.1f}".format(bmr - self._daily_cals) + " cals",
+            font_size=40,
+            color='#FFFFFF',
+            halign='center'
+        )
+        age_input_field = Builder.load_string("""MDTextField:
+            hint_text: "Enter age"
+            multiline: False""")
+        ht_input_field = Builder.load_string("""MDTextField:
+                    hint_text: "Enter height (cm)"
+                    multiline: False""")
+        wt_input_field = Builder.load_string("""MDTextField:
+                    hint_text: "Enter weight (kg)"
+                    multiline: False""")
+        sex_input_field = Builder.load_string("""MDTextField:
+                    hint_text: "Enter sex (m/f)"
+                    multiline: False""")
+
+        popup_update_button = Button(
+            text="UPDATE USER INFO",
+            size_hint=(1, 0.8),
+            bold=True,
+            background_color='#C19ADD',
+        )
+        #popup_update_button.bind(on_release=self.rotate_units)
+
+        popup_layout_new.add_widget(popup_total_header)
+        popup_layout_new.add_widget(popup_total)
+        popup_layout_new.add_widget(popup_remaining_header)
+        popup_layout_new.add_widget(popup_remaining)
+        popup_layout_new.add_widget(age_input_field)
+        popup_layout_new.add_widget(ht_input_field)
+        popup_layout_new.add_widget(wt_input_field)
+        popup_layout_new.add_widget(sex_input_field)
+
+        popup_layout_new.add_widget(popup_update_button)
+
+        self._rec_popup = Popup(title='Recommended Caloric Intake (ESC to close)',
+                                  content=popup_layout_new,
+                                  size_hint=(None, None), size=(500, 550))
+
+        self._rec_popup.open()
 
     def rotate_units(self, instance):
         curr_pos = self._units.index(self._curr_unit)
@@ -528,7 +609,7 @@ class MyApp(MDApp):
         )
         scroll.add_widget(table)
         # makes the widgets scrollable
-        popup = Popup(title='History',
+        popup = Popup(title='User History (ESC to close)',
                       content=scroll,
                       size_hint=(None, None), size=(950, 700))
         popup.open()
@@ -549,14 +630,14 @@ class MyApp(MDApp):
             self.theme_cls.theme_style = "Light"
         self.save_preferences()
 
-# calculates BMR (diff for m and f)
-def bmr(age, ht, wt, sex):
-    if sex == "m":
-        return 88.362 + (13.397 * wt) + (4.799 * ht) - (5.677 * age)
-    elif sex == "f":
-        return 447.593 + (9.247 * wt) + (3.098 * ht) - (4.330 * age)
-    else:
-        return 0
+    # calculates BMR (diff for m and f)
+    def bmr(self, age, ht, wt, sex):
+        if sex == "m":
+            return 88.362 + (13.397 * wt) + (4.799 * ht) - (5.677 * age)
+        elif sex == "f":
+            return 447.593 + (9.247 * wt) + (3.098 * ht) - (4.330 * age)
+        else:
+            return 0
 
 
 def main():
