@@ -549,6 +549,15 @@ class MyApp(MDApp):
             self.theme_cls.theme_style = "Light"
         self.save_preferences()
 
+# calculates BMR (diff for m and f)
+def bmr(age, ht, wt, sex):
+    if sex == "m":
+        return 88.362 + (13.397 * wt) + (4.799 * ht) - (5.677 * age)
+    elif sex == "f":
+        return 447.593 + (9.247 * wt) + (3.098 * ht) - (4.330 * age)
+    else:
+        return 0
+
 
 def main():
     abspath = os.path.abspath(__file__)
