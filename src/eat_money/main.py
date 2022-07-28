@@ -549,6 +549,11 @@ class MyApp(MDApp):
                     hint_text: "Enter sex (m/f)"
                     multiline: False""")
 
+        self.age_input_field.bind(on_text_validate=lambda x: self.rec_tb_transfer(0))
+        self.ht_input_field.bind(on_text_validate=lambda x: self.rec_tb_transfer(1))
+        self.wt_input_field.bind(on_text_validate=lambda x: self.rec_tb_transfer(2))
+        self.sex_input_field.bind(on_text_validate=lambda x: self.update_user_info("idk"))
+
         self.popup_rec_status = Label(
             text="View and update recommended daily intake here",
             font_size=16,
@@ -583,6 +588,17 @@ class MyApp(MDApp):
                                   size_hint=(None, None), size=(500, 550))
 
         self._rec_popup.open()
+
+    def rec_tb_transfer(self, id):
+        if id == 0:
+            self.age_input_field.focus = False
+            self.ht_input_field.focus = True
+        if id == 1:
+            self.ht_input_field.focus = False
+            self.wt_input_field.focus = True
+        if id == 2:
+            self.wt_input_field.focus = False
+            self.sex_input_field.focus = True
 
     def update_user_info(self, idk):
         move_forward = True
