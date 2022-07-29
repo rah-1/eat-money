@@ -500,7 +500,6 @@ class MyApp(MDApp):
         self._stats_popup.open()
 
     def view_rec_button(self, instance):
-        self.theme_cls.theme_style = "Dark"
         if instance == "new":
             self._rec_popup.dismiss()
         self.reset_user_entry()
@@ -539,18 +538,26 @@ class MyApp(MDApp):
         )
         self.age_input_field = Builder.load_string("""MDTextField:
             write_tab: False
+            current_hint_text_color: [1,1,1,0.6]
+            line_color_normal: [1,1,1,0.15]
             hint_text: "Enter age"
             multiline: False""")
         self.ht_input_field = Builder.load_string("""MDTextField:
             write_tab: False
+            current_hint_text_color: [1,1,1,0.6]
+            line_color_normal: [1,1,1,0.15]
             hint_text: "Enter height (cm)"
             multiline: False""")
         self.wt_input_field = Builder.load_string("""MDTextField:
             write_tab: False
+            current_hint_text_color: [1,1,1,0.6]
+            line_color_normal: [1,1,1,0.15]
             hint_text: "Enter weight (kg)"
             multiline: False""")
         self.sex_input_field = Builder.load_string("""MDTextField:
             write_tab: False
+            current_hint_text_color: [1,1,1,0.6]
+            line_color_normal: [1,1,1,0.15]
             hint_text: "Enter sex (m/f)"
             multiline: False""")
 
@@ -593,13 +600,7 @@ class MyApp(MDApp):
                                   content=popup_layout_new,
                                   size_hint=(None, None), size=(500, 550))
 
-        self._rec_popup.bind(on_dismiss=self.fix_theme_popup)
-
         self._rec_popup.open()
-
-    def fix_theme_popup(self, instance):
-        if self._light_theme == True:
-            self.theme_cls.theme_style = "Light"
 
     def rec_tb_transfer(self, id):
         if id == 0:
