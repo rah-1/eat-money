@@ -165,7 +165,7 @@ class MyApp(MDApp):
 
         # button widget for recommended caloric intake
         self.rec_button = Button(
-            text="CALORIC RECOMMENDATIONS",
+            text="CALORIE RECOMMENDATIONS",
             size_hint=(1, 0.5),
             bold=True,
             background_color='#C19ADD',
@@ -500,6 +500,7 @@ class MyApp(MDApp):
         self._stats_popup.open()
 
     def view_rec_button(self, instance):
+        self.theme_cls.theme_style = "Dark"
         if instance == "new":
             self._rec_popup.dismiss()
         self.reset_user_entry()
@@ -537,17 +538,21 @@ class MyApp(MDApp):
             halign='center'
         )
         self.age_input_field = Builder.load_string("""MDTextField:
+            write_tab: False
             hint_text: "Enter age"
             multiline: False""")
         self.ht_input_field = Builder.load_string("""MDTextField:
-                    hint_text: "Enter height (cm)"
-                    multiline: False""")
+            write_tab: False
+            hint_text: "Enter height (cm)"
+            multiline: False""")
         self.wt_input_field = Builder.load_string("""MDTextField:
-                    hint_text: "Enter weight (kg)"
-                    multiline: False""")
+            write_tab: False
+            hint_text: "Enter weight (kg)"
+            multiline: False""")
         self.sex_input_field = Builder.load_string("""MDTextField:
-                    hint_text: "Enter sex (m/f)"
-                    multiline: False""")
+            write_tab: False
+            hint_text: "Enter sex (m/f)"
+            multiline: False""")
 
         self.age_input_field.bind(on_text_validate=lambda x: self.rec_tb_transfer(0))
         self.ht_input_field.bind(on_text_validate=lambda x: self.rec_tb_transfer(1))
@@ -583,11 +588,18 @@ class MyApp(MDApp):
         popup_layout_new.add_widget(self.popup_rec_status)
         popup_layout_new.add_widget(popup_update_button)
 
+
         self._rec_popup = Popup(title='Recommended Caloric Intake (ESC to close)',
                                   content=popup_layout_new,
                                   size_hint=(None, None), size=(500, 550))
 
+        self._rec_popup.bind(on_dismiss=self.fix_theme_popup)
+
         self._rec_popup.open()
+
+    def fix_theme_popup(self, instance):
+        if self._light_theme == True:
+            self.theme_cls.theme_style = "Light"
 
     def rec_tb_transfer(self, id):
         if id == 0:
