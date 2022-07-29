@@ -36,12 +36,6 @@ import csv
 
 Config.set('graphics', 'resizable', True)
 
-input_helper = """
-MDTextField:
-    hint_text: "Enter info"
-    multiline:False
-"""
-
 class MyApp(MDApp):
     def build(self):
         Window.bind(on_keyboard=self.dismiss_popup_key_press)
@@ -57,9 +51,14 @@ class MyApp(MDApp):
         self._curr_cost = ""
 
         # units of time available
-        # in the future, want the ability to "remember" preferences
         self._units = ["Daily", "Weekly", "Monthly", "Annual"]
         self._curr_unit = self._units[0]
+
+        # default assignment for BMR values
+        self._age = 25
+        self._heightcm = 180
+        self._weightkg = 75
+        self._sex = "m"
 
         # reads in old data from csv upon build start
         # stores Food objects in food_list
@@ -128,7 +127,9 @@ class MyApp(MDApp):
         self.window.add_widget(self.cal_disp)
 
         # text input widget for user input
-        self.input_field = Builder.load_string(input_helper)
+        self.input_field = Builder.load_string("""MDTextField:
+            hint_text: "Enter info"
+            multiline: False""")
         self.input_field.focus = True
         self.window.add_widget(self.input_field)
 
@@ -162,6 +163,16 @@ class MyApp(MDApp):
         self.history_button.bind(on_release=self.view_history_button)
         self.window.add_widget(self.history_button)
 
+        # button widget for recommended caloric intake
+        self.rec_button = Button(
+            text="CALORIE RECOMMENDATIONS",
+            size_hint=(1, 0.5),
+            bold=True,
+            background_color='#C19ADD',
+        )
+        self.rec_button.bind(on_release=self.view_rec_button)
+        self.window.add_widget(self.rec_button)
+
         self.theme_button = Button(
             text="CHANGE THEME",
             size_hint=(1, 0.5),
@@ -192,7 +203,7 @@ class MyApp(MDApp):
     # side-note: kivy closes the main window when ESC is pressed normally
     def dismiss_popup_key_press(self, key, scancode, codepoint, modifiers, idk):
         if isinstance(App.get_running_app().root_window.children[0], Popup):
-            if scancode == 13 or scancode == 27 or scancode == 32:
+            if scancode == 27 or scancode == 32:
                 App.get_running_app().root_window.children[0].dismiss()
 
 
@@ -201,17 +212,29 @@ class MyApp(MDApp):
             prefs_dict = json.load(r_prefs)
 
         # currently hardcoded for num of preferences (2)
-        if len(prefs_dict) == 2:
+        if len(prefs_dict) == 6:
             if prefs_dict["theme"] == "dark":
                 self.change_theme_button("new")
             if prefs_dict["unit"] in self._units:
                 self._curr_unit = prefs_dict["unit"]
+            if self.check_valid_cost(prefs_dict["age"], False):
+                self._age = prefs_dict["age"]
+            if self.check_valid_cost(prefs_dict["height"], False):
+                self._heightcm = prefs_dict["height"]
+            if self.check_valid_cost(prefs_dict["weight"], False):
+                self._weightkg = prefs_dict["weight"]
+            if prefs_dict["sex"] == "f":
+                self._sex = "f"
 
     def save_preferences(self):
         if self._light_theme:
-            prefs_dict = {"theme": "light", "unit": self._curr_unit.lower()}
+            prefs_dict = {"theme": "light", "unit": self._curr_unit.lower(),
+                          "age": self._age, "height": self._heightcm,
+                          "weight": self._weightkg, "sex": self._sex}
         else:
-            prefs_dict = {"theme": "dark", "unit": self._curr_unit.lower()}
+            prefs_dict = {"theme": "dark", "unit": self._curr_unit.lower(),
+                          "age": self._age, "height": self._heightcm,
+                          "weight": self._weightkg, "sex": self._sex}
         with open('preferences.json', 'w') as w_prefs:
             json.dump(prefs_dict, w_prefs, indent=4)
 
@@ -247,12 +270,13 @@ class MyApp(MDApp):
 
     # input validation for cost field entry
     # checks whether a valid float was entered
-    def check_valid_cost(self, entry):
+    def check_valid_cost(self, entry, usage):
         try:
             cost = float(entry)
             return True
         except ValueError:
-            self.infobox.text = "please enter a valid cost!"
+            if usage:
+                self.infobox.text = "please enter a valid cost!"
             return False
 
     def calc_old_data_daily(self):
@@ -284,7 +308,7 @@ class MyApp(MDApp):
         # this first (if) block runs when we are at the submit cost menu
         # the second (else) block runs when we are at the submit food menu
         if self._first_click:
-            if self.check_valid_cost(self.input_field.text):
+            if self.check_valid_cost(self.input_field.text, True):
                 self.submit_button.text = "SUBMIT FOOD"
                 self._curr_cost = self.input_field.text
                 self._first_click = False
@@ -469,11 +493,150 @@ class MyApp(MDApp):
         popup_layout.add_widget(popup_sugar)
         popup_layout.add_widget(popup_sodium)
 
-        self._stats_popup = Popup(title='User Statistics',
+        self._stats_popup = Popup(title='User Statistics (ESC to close)',
                                   content=popup_layout,
                                   size_hint=(None, None), size=(400, 550))
 
         self._stats_popup.open()
+
+    def view_rec_button(self, instance):
+        if instance == "new":
+            self._rec_popup.dismiss()
+        self.reset_user_entry()
+
+        bmr = self.bmr(self._age, self._heightcm, self._weightkg, self._sex)
+
+        popup_layout_new = GridLayout(cols=1)
+
+        popup_total_header = Label(
+            text="Recommended Daily Intake (BMR):",
+            underline=True,
+            font_size=24,
+            color='#FFFFFF',
+            halign='center'
+        )
+        popup_total = Label(
+            bold=True,
+            text="{:.1f}".format(bmr) + " cals",
+            font_size=40,
+            color='#FFFFFF',
+            halign='center'
+        )
+        popup_remaining_header = Label(
+            text="Calories Remaining:",
+            underline=True,
+            font_size=24,
+            color='#FFFFFF',
+            halign='center'
+        )
+        popup_remaining = Label(
+            bold=True,
+            text="{:.1f}".format(bmr - self._daily_cals) + " cals",
+            font_size=40,
+            color='#FFFFFF',
+            halign='center'
+        )
+        self.age_input_field = Builder.load_string("""MDTextField:
+            write_tab: False
+            current_hint_text_color: [1,1,1,0.6]
+            line_color_normal: [1,1,1,0.15]
+            hint_text: "Enter age"
+            multiline: False""")
+        self.ht_input_field = Builder.load_string("""MDTextField:
+            write_tab: False
+            current_hint_text_color: [1,1,1,0.6]
+            line_color_normal: [1,1,1,0.15]
+            hint_text: "Enter height (cm)"
+            multiline: False""")
+        self.wt_input_field = Builder.load_string("""MDTextField:
+            write_tab: False
+            current_hint_text_color: [1,1,1,0.6]
+            line_color_normal: [1,1,1,0.15]
+            hint_text: "Enter weight (kg)"
+            multiline: False""")
+        self.sex_input_field = Builder.load_string("""MDTextField:
+            write_tab: False
+            current_hint_text_color: [1,1,1,0.6]
+            line_color_normal: [1,1,1,0.15]
+            hint_text: "Enter sex (m/f)"
+            multiline: False""")
+
+        self.age_input_field.bind(on_text_validate=lambda x: self.rec_tb_transfer(0))
+        self.ht_input_field.bind(on_text_validate=lambda x: self.rec_tb_transfer(1))
+        self.wt_input_field.bind(on_text_validate=lambda x: self.rec_tb_transfer(2))
+        self.sex_input_field.bind(on_text_validate=lambda x: self.update_user_info("idk"))
+
+        self.popup_rec_status = Label(
+            text="View and update recommended daily intake here",
+            font_size=16,
+            color='#FFFFFF',
+            halign='center'
+        )
+
+        if instance == "new":
+            self.popup_rec_status.text = "Updated user information successfully!"
+
+        popup_update_button = Button(
+            text="UPDATE USER INFO",
+            size_hint=(1, 0.8),
+            bold=True,
+            background_color='#C19ADD',
+        )
+        popup_update_button.bind(on_release=self.update_user_info)
+
+        popup_layout_new.add_widget(popup_total_header)
+        popup_layout_new.add_widget(popup_total)
+        popup_layout_new.add_widget(popup_remaining_header)
+        popup_layout_new.add_widget(popup_remaining)
+        popup_layout_new.add_widget(self.age_input_field)
+        popup_layout_new.add_widget(self.ht_input_field)
+        popup_layout_new.add_widget(self.wt_input_field)
+        popup_layout_new.add_widget(self.sex_input_field)
+        popup_layout_new.add_widget(self.popup_rec_status)
+        popup_layout_new.add_widget(popup_update_button)
+
+
+        self._rec_popup = Popup(title='Recommended Caloric Intake (ESC to close)',
+                                  content=popup_layout_new,
+                                  size_hint=(None, None), size=(500, 550))
+
+        self._rec_popup.open()
+
+    def rec_tb_transfer(self, id):
+        if id == 0:
+            self.age_input_field.focus = False
+            self.ht_input_field.focus = True
+        if id == 1:
+            self.ht_input_field.focus = False
+            self.wt_input_field.focus = True
+        if id == 2:
+            self.wt_input_field.focus = False
+            self.sex_input_field.focus = True
+
+    def update_user_info(self, idk):
+        move_forward = True
+        if not self.check_valid_cost(self.age_input_field.text, False):
+            move_forward = False
+            self.age_input_field.text = ""
+        if not self.check_valid_cost(self.ht_input_field.text, False):
+            move_forward = False
+            self.ht_input_field.text = ""
+        if not self.check_valid_cost(self.wt_input_field.text, False):
+            move_forward = False
+            self.wt_input_field.text = ""
+        if self.sex_input_field.text.lower() != 'm' and self.sex_input_field.text.lower() != 'f':
+            move_forward = False
+            self.sex_input_field.text = ""
+
+        if not move_forward:
+            self.popup_rec_status.text = "Please enter valid user information!"
+        else:
+            self._age = float(self.age_input_field.text)
+            self._heightcm = float(self.ht_input_field.text)
+            self._weightkg = float(self.wt_input_field.text)
+            self._sex = self.sex_input_field.text.lower()
+            self.save_preferences()
+            self.view_rec_button("new")
 
     def rotate_units(self, instance):
         curr_pos = self._units.index(self._curr_unit)
@@ -510,7 +673,7 @@ class MyApp(MDApp):
         )
         scroll.add_widget(table)
         # makes the widgets scrollable
-        popup = Popup(title='History',
+        popup = Popup(title='User History (ESC to close)',
                       content=scroll,
                       size_hint=(None, None), size=(950, 700))
         popup.open()
@@ -530,6 +693,15 @@ class MyApp(MDApp):
             self.infobox.text = "applied light theme!"
             self.theme_cls.theme_style = "Light"
         self.save_preferences()
+
+    # calculates BMR (diff for m and f)
+    def bmr(self, age, ht, wt, sex):
+        if sex == "m":
+            return 88.362 + (13.397 * wt) + (4.799 * ht) - (5.677 * age)
+        elif sex == "f":
+            return 447.593 + (9.247 * wt) + (3.098 * ht) - (4.330 * age)
+        else:
+            return 0
 
 
 def main():
