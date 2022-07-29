@@ -1,14 +1,21 @@
 from datetime import date
 import os
+import pandas as pd
 
+from kivy.uix.anchorlayout import AnchorLayout
 from kivymd.uix.toolbar import MDToolbar, MDBottomAppBar
 
 from eat_money.food import Food
 from eat_money.CalorieNinja import find_food_data
+from text_helper import input_helper,date_helper,food_helper,cost_helper
 
 #TODO: will need to add kivymd in project requirements/packaging
 from kivymd.app import MDApp
 from kivy.lang import Builder
+from kivymd.uix.boxlayout import MDBoxLayout
+from kivymd.uix.floatlayout import MDFloatLayout
+from kivymd.uix.button import MDRaisedButton, MDFlatButton
+from kivymd.uix.button import MDRectangleFlatButton
 from kivymd.uix.label import Label
 from kivymd.uix.list import MDList, TwoLineListItem
 from kivymd.uix.dialog import MDDialog
@@ -35,11 +42,6 @@ import csv
 
 Config.set('graphics', 'resizable', True)
 
-input_helper = """
-MDTextField:
-    hint_text: "Enter text"
-    multiline:False
-"""
 class MyApp(MDApp):
     def build(self):
         Window.bind(on_keyboard=self.dismiss_popup_key_press)
@@ -477,6 +479,68 @@ class MyApp(MDApp):
         self.save_preferences()
         self.view_stats_button("new")
 
+    def on_button_press(self, instance_button: MDRaisedButton) -> None:
+        print("success button press")
+        '''Called when a control button is clicked.'''
+
+        try:
+            {
+                "DELETE ENTRY": self.remove_row,
+                "EDIT ENTRY": self.edit_row,
+            }[instance_button.text]()
+        except KeyError:
+            pass
+
+    def remove_row(self) -> None:
+        print("success remove row")
+        size = len(self._food_list)
+        list = self.data_tables.get_row_checks()
+        for item in list:
+            print(item[0])
+            del self._food_list[size - int(item[0])]
+            print(size - int(item[0]))
+            lines = []
+            count = 0
+            with open('data.csv', 'r') as readFile:
+                print("OPENED FILE")
+                reader = csv.reader(readFile)
+                for row in reader:
+                    if (size - int(item[0])+1) != count:
+                        lines.append(row)
+                        print(row)
+                    count+=1
+
+            with open('data.csv', 'w', newline='') as writeFile:
+                print("WRITE FILE")
+                writer = csv.writer(writeFile)
+                writer.writerows(lines)
+
+
+            # print("print food list")
+        # for item in self._food_list:
+        #     print(item.get_name())
+
+        obj=None
+        self.popup.dismiss()
+        self.view_history_button(obj)
+
+    def edit_row(self) -> None:
+        print("success edit row")
+        #df.set_value(0,"Name3",new_value)
+
+    def check_press(self, instance, current_row):
+        #instance willl have the table data of where the check is pressed
+        #current_row contains the values of where the row is pressed
+        # print(instance)
+        print("pressed check")
+        # list = self.data_tables.get_row_checks()
+        # for item in list:
+        #     print(item[0])
+    #
+    # def row_press(self, instance, all_rows):
+    #     print(all_rows)
+
+
     # view history by date:
     def view_history_button(self, instance):
         self.reset_user_entry()
@@ -507,6 +571,56 @@ class MyApp(MDApp):
                       content=scroll,
                       size_hint=(None, None), size=(500, 400))
         popup.open()
+        layout = GridLayout(rows=3)
+        button_layout = GridLayout(cols=2)
+
+        # retrieves item information from food list. adds each item as its own text widget
+        history_list = []
+        for num, item in enumerate(reversed(self._food_list)):
+            history_list.append((num+1, item.get_date(),item.get_name(),item.get_calories(),"$%s"%item.get_cost(), item.get_carbs(), item.get_protein(), item.get_fat(), item.get_sugar(), item.get_sodium()))
+
+        # this framework is limited and has bugs
+        # datatables is weird: in order to click the check all without there being a bug, the number of rows must be displayed on the screen
+        #TODO: change the rows_num=2 to a diff number (figure out how to format? for diff screens:
+        self.data_tables = MDDataTable(size_hint=(None, None),
+                                       size=(900, 450),
+                                       check=True,
+                                       use_pagination=True,
+                                       rows_num=2,
+                                       column_data=[
+                                            ("No.", dp(20)),
+                                            ("Date", dp(20)),
+                                            ("Food", dp(25)),
+                                            ("Calories", dp(20)),
+                                            ("Cost", dp(15)),
+                                            ("Carbs",dp(20)),
+                                            ("Protein",dp(20)),
+                                            ("Fat", dp(20)),
+                                            ("Sugar", dp(20)),
+                                            ("Sodium", dp(20))
+                                        ],
+                                        row_data = history_list,
+                                        )
+
+        self.data_tables.bind(on_check_press=self.check_press)
+        # self.data_tables.bind(on_row_press=self.row_press)
+
+        #add buttons to edit history
+        layout.add_widget(self.data_tables)
+        for button_text in ["DELETE ENTRY", "EDIT ENTRY"]:
+            button_layout.add_widget(
+                MDRaisedButton(
+                    text=button_text, on_release=self.on_button_press, size_hint=(1,None),md_bg_color=(193/255,154/255,221/255,1)
+                )
+            )
+        close_button = MDRaisedButton(text="Close", md_bg_color=(173/255,134/255,201/255,1),size_hint=(1,1))
+        layout.add_widget(button_layout)
+        layout.add_widget(close_button)
+        self.popup = Popup(title='History',
+                      content=layout,
+                      size_hint=(None, None), size=(950, 700))
+        close_button.bind(on_press=self.popup.dismiss)
+        self.popup.open()
 
     def change_theme_button(self, instance):
         self.reset_user_entry()
