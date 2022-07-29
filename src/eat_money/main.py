@@ -567,7 +567,7 @@ class MyApp(MDApp):
         self.sex_input_field.bind(on_text_validate=lambda x: self.update_user_info("idk"))
 
         self.popup_rec_status = Label(
-            text="View and update recommended daily intake here",
+            text="View and update basal metabolic rate (BMR) data",
             font_size=16,
             color='#FFFFFF',
             halign='center'
