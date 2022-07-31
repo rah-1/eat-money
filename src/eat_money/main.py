@@ -56,6 +56,7 @@ class MyApp(MDApp):
         self._item_selected = False
         self._selected_index = None
         self.index_press = None
+        self.selected_obj = None
 
         # window title
         self.title = "Eat Money"
@@ -511,19 +512,22 @@ class MyApp(MDApp):
         if(self._item_selected):
             self._selected_index = self.index_press
 
+    def unselect_item(self, instance):
+        self.selected_obj.do_unselected_item()
+        self.change_popup.dismiss()
+
     def on_selected(self, instance_selection_list, instance_selection_item):
         if len(instance_selection_list.get_selected_list_items()) > 1:
             instance_selection_item.do_unselected_item()
         if len(instance_selection_list.get_selected_list_items()) == 1 and not self._item_selected:
             self._item_selected = True
+            self.selected_obj = instance_selection_item
             self.set_index()
         if len(instance_selection_list.get_selected_list_items()) == 0:
             self._item_selected = False
-        print(self._selected_index)
 
     def on_unselected(self, instance_selection_list, instance_selection_item):
         if len(instance_selection_list.get_selected_list_items()) == 0:
-            print("VALUE RESET")
             self._item_selected = False
             # self._selection_list = instance_selection_list.get_selected_list_items()
 
@@ -531,7 +535,7 @@ class MyApp(MDApp):
         print("success edit row")
 
         layout = GridLayout(rows=3, spacing="1dp")
-        button_layout = GridLayout(cols=2, size_hint=(1, 0.14),spacing="1dp")
+        button_layout = GridLayout(cols=2,spacing="1dp",size_hint=(1,.105),size=(750,90))
         scroll = ScrollView()
         history_layout = Builder.load_string(list_helper)
 
@@ -545,8 +549,6 @@ class MyApp(MDApp):
                     text_color=( 1, 1, 1, 0),
                     on_press=lambda x, smth = index: self.item_press(smth),
                     secondary_text=item.get_date(),
-                    size_hint=(None, None),
-                    size=(900, 450),
                     _no_ripple_effect=True,
                 )
                 food_header.add_widget(icon)
@@ -566,11 +568,11 @@ class MyApp(MDApp):
         for button_text in ["DELETE ENTRY", "CHANGE ENTRY"]:
             button_layout.add_widget(
                 MDRaisedButton(
-                    text=button_text, on_release=self.on_button_press, size_hint=(1,1),
+                    text=button_text, on_release=self.on_button_press, size_hint=(1,None),size=(325,50),
                     md_bg_color=(193 / 255, 154 / 255, 221 / 255, 1)
                 )
             )
-        close_button = MDRaisedButton(text="Close", md_bg_color=(193 / 255, 154 / 255, 221 / 255, 1), size_hint=(1, 0.14))
+        close_button = MDRaisedButton(text="Close", md_bg_color=(193 / 255, 154 / 255, 221 / 255, 1), size_hint=(1,None),size=(750,90))
         layout.add_widget(button_layout)
         layout.add_widget(close_button)
 
@@ -578,7 +580,7 @@ class MyApp(MDApp):
                                 title_color=( 0, 0, 0, 1),
                                 content=layout,
                                 background='',
-                                size_hint=(None, None), size=(950, 700))
+                                size_hint=(None, None), size=(650, 500))
         close_button.bind(on_press=self.edit_popup.dismiss)
         self.edit_popup.open()
 
@@ -637,7 +639,7 @@ class MyApp(MDApp):
             self.change_status = Label(
                 text="Change entry details",
                 font_size=16,
-                color='#FFFFFF',
+                color='#000000',
                 halign='center'
             )
             layout.add_widget(self.change_status)
@@ -645,8 +647,8 @@ class MyApp(MDApp):
                                       background='',
                                       title_color=(0, 0, 0, 1),
                                       content=layout,
-                                      size_hint=(None, None), size=(800, 550))
-            close_button.bind(on_press=self.change_popup.dismiss)
+                                      size_hint=(None, None), size=(350, 300))
+            close_button.bind(on_press=self.unselect_item)
             self.change_popup.open()
 
     def check_entry(self, instance):
@@ -662,54 +664,55 @@ class MyApp(MDApp):
         self.food.text = self.food.text.strip()
         self.date.text = self.date.text.strip()
         self.cost.text = self.cost.text.strip()
+        self.change_status.text = 'Please enter valid information!'
         # print(self.food.text)
-
-        if self.date.text != "" or self.cost.text != "" or self.food.text != "":
-            if not self.check_valid_cost(self.cost.text,False):
-                move_foward = False
-                self.cost.text = item.get_cost()
-                print("COST FAILED")
-
-            if not self.check_date(self.date.text):
-                move_foward = False
-                self.date.text = item.get_date()
-                print("DATE FAILED")
-
-            if not self.food.text.isalpha():
-                move_foward = False
-                self.food.text = item.get_name()
-                print("FOOD FAILED")
+        if self.date.text == "":
+            self.date.text = item.get_date()
+            move_foward = False
+        elif self.cost.text == "":
+            self.cost.text = item.get_cost()
+            move_foward = False
+        elif self.food.text == "":
+            self.food.text = item.get_name()
+            move_foward=False
+        elif self.cost.text == item.get_cost().strip() and self.date.text == item.get_date().strip() and self.food.text == item.get_name().strip():
+            self.change_status.text = "No New Information Entered!"
+            move_foward = False
+        elif not self.check_valid_cost(self.cost.text,False):
+            move_foward = False
+            self.cost.text=item.get_cost()
+        elif not self.check_date(self.date.text):
+            move_foward = False
+            self.date.text=item.get_date()
+        elif not self.food.text.isalpha():
+            move_foward = False
+            self.food.text = item.get_name()
+        else:
+            if self.food.text == item.get_name():
+                print("SAME ITEM")
+                food = Food(self.date.text, item.get_name(), self.cost.text, item.get_calories(),
+                              item.get_carbs(), item.get_protein(), item.get_fat(), item.get_sugar(),
+                              item.get_sodium())
+                food_list.append(food)
             else:
-                if self.food.text == item.get_name():
-                    print("SAME ITEM")
-                    food = Food(self.date.text, item.get_name(), self.cost.text, item.get_calories(),
-                                  item.get_carbs(), item.get_protein(), item.get_fat(), item.get_sugar(),
-                                  item.get_sodium())
-                    food_list.append(food)
-                else:
-                    food_list = find_food_data(self.food.text, self.date.text, self.cost.text)
+                food_list = find_food_data(self.food.text, self.date.text, self.cost.text)
 
-            if len(food_list) == 0 or len(food_list) > 1:
-                move_foward = False
+                if len(food_list) == 0:
+                    self.change_status.text = " Unable to locate " + self.food.text + " in database!"
+                    move_foward = False
+                elif len(food_list) > 1:
+                    self.change_status.text = " Too many food items listed!"
+                    move_foward = False
 
         #TODO: get rid of pressing space to exit pop-up
 
-        if self.cost.text == item.get_cost().strip() and self.date.text == item.get_date().strip() and self.food.text == item.get_name().strip():
-            self.change_status.text = "No New Information Entered!"
-        elif not move_foward:
-            self.change_status.text = "Please enter valid information!"
-            if len(food_list) == 0:
-                self.change_status.text += " Unable to locate " + self.food.text + " in database!"
-                self.food.text = item.get_name()
-            if len(food_list) > 1:
-                self.change_status.text += " Too many food items listed!"
-                self.food.text = item.get_name()
+        if not move_foward:
+            print('nothing')
+            # self.change_status.text = 'Please enter valid information!'
+
         else:
             self.remove_item(num)
             food = food_list[0]
-            data_entry = [food.get_date(), food.get_name(), food.get_cost(), food.get_calories(),
-                          food.get_carbs(), food.get_protein(), food.get_fat(), food.get_sugar(), food.get_sodium()]
-            self.add_new_data(data_entry)
             self._food_list.append(food)
             self._food_list.sort(key=lambda x: x.get_date())
             self._daily_cals += float(item.get_calories())
@@ -746,14 +749,11 @@ class MyApp(MDApp):
     def update_csv(self, num):
         lines = []
         count = 0
-        with open('data.csv', 'r') as readFile:
-            print("OPENED FILE")
-            reader = csv.reader(readFile)
-            for row in reader:
-                if (num + 1) != count:
-                    lines.append(row)
-                    # print(row)
-                count += 1
+        lines.append(['Date','Name','Cost','Calories','Carbs','Protein','Total Fats','Sugar','Sodium'])
+        for item in self._food_list:
+            data_entry = [item.get_date(), item.get_name(), item.get_cost(), item.get_calories(),
+                          item.get_carbs(), item.get_protein(), item.get_fat(), item.get_sugar(), item.get_sodium()]
+            lines.append(data_entry)
 
         with open('data.csv', 'w', newline='') as writeFile:
             # print("WRITE FILE")
@@ -779,8 +779,7 @@ class MyApp(MDApp):
         # this framework is limited and has bugs
         # datatables is weird: in order to click the check all without there being a bug, the number of rows must be displayed on the screen
         #TODO: change the rows_num=2 to a diff number (figure out how to format? for diff screens:
-        self.data_tables = MDDataTable(size_hint=(1, None),
-                                       size=(900, 450),
+        self.data_tables = MDDataTable(size_hint=(1, 1),
                                        use_pagination=True,
                                        rows_num=5,
                                        column_data=[
@@ -801,15 +800,15 @@ class MyApp(MDApp):
         #add buttons to edit history
         layout.add_widget(self.data_tables)
         edit_button = MDRaisedButton(
-                    text="EDIT ENTRIES", on_release=self.on_button_press, size_hint=(1,0.5),md_bg_color=(193/255,154/255,221/255,1)
+                    text="EDIT ENTRIES", on_release=self.on_button_press, size_hint=(1,None),size=(750,90),md_bg_color=(193/255,154/255,221/255,1)
                 )
-        close_button = MDRaisedButton(text="Close", md_bg_color=(193/255,154/255,221/255,1),size_hint=(1,0.5))
+        close_button = MDRaisedButton(text="Close", md_bg_color=(193/255,154/255,221/255,1),size_hint=(1,None),size=(750,90))
         layout.add_widget(edit_button)
         layout.add_widget(close_button)
         self.history_popup = Popup(title='History',
                                    content=layout,
                                    title_color=(0, 0, 0, 1),
-                                   size_hint=(None, None), size=(950, 700),
+                                   size_hint=(None, None), size=(650, 500),
                                    background = ''
                                    )
         close_button.bind(on_press=self.history_popup.dismiss)
