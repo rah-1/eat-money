@@ -92,6 +92,7 @@ class MyApp(MDApp):
         # also, color scheme/theme can be changed... preferences?
         self.header = Label(
             text="eat money",
+            font_name="Comic",
             font_size=95,
             color='#8CA262',
             halign='center'
@@ -186,6 +187,7 @@ class MyApp(MDApp):
         # ex. if user input is invalid/successful
         self.infobox = Label(
             text="welcome to eat money!",
+            font_name="Comic",
             font_size=35,
             color='#8CA262',
             halign='center'
