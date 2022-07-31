@@ -78,8 +78,7 @@ class MyApp(MDApp):
         self._first_click = False
 
         self._today = date.today()
-        # print("Today's date:", self._today.strftime("%B %d, %Y"))
-
+        # print("Today's date:", self._today.strftime("%B %d, %Y")
         # layout convention: grid
         # this means that each of the widgets (labels, buttons, etc.)
         # will each fit somewhere in the "grid" (makes things easier to orient)
