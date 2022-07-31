@@ -497,12 +497,105 @@ class MyApp(MDApp):
 
         try:
             {
-                "DELETE ENTRY": self.remove_row,
                 "EDIT ENTRIES": self.edit_row,
+                "DELETE ENTRY": self.remove_row,
                 "CHANGE ENTRY": self.change_row,
             }[instance_button.text]()
         except KeyError:
             pass
+
+    def item_press(self, num):
+        self.index_press = num
+
+    def set_index(self):
+        if(self._item_selected):
+            self._selected_index = self.index_press
+
+    def on_selected(self, instance_selection_list, instance_selection_item):
+        if len(instance_selection_list.get_selected_list_items()) > 1:
+            instance_selection_item.do_unselected_item()
+        if len(instance_selection_list.get_selected_list_items()) == 1 and not self._item_selected:
+            self._item_selected = True
+            self.set_index()
+        if len(instance_selection_list.get_selected_list_items()) == 0:
+            self._item_selected = False
+        print(self._selected_index)
+
+    def on_unselected(self, instance_selection_list, instance_selection_item):
+        if len(instance_selection_list.get_selected_list_items()) == 0:
+            print("VALUE RESET")
+            self._item_selected = False
+            # self._selection_list = instance_selection_list.get_selected_list_items()
+
+    def edit_row(self) -> None:
+        print("success edit row")
+
+        layout = GridLayout(rows=3, spacing="1dp")
+        button_layout = GridLayout(cols=2, size_hint=(1, 0.14),spacing="1dp")
+        scroll = ScrollView()
+        history_layout = Builder.load_string(list_helper)
+
+        index = 1
+        # retrieves item information from food list. adds each item as its own text widget
+        if (len(self._food_list) > 0):
+            for item in reversed( self._food_list):
+                icon = IconLeftWidget(icon="checkbox-blank-circle")
+                food_header = TwoLineAvatarListItem(
+                    text=item.get_name(),
+                    text_color=( 1, 1, 1, 0),
+                    on_press=lambda x, smth = index: self.item_press(smth),
+                    secondary_text=item.get_date(),
+                    size_hint=(None, None),
+                    size=(900, 450),
+                    _no_ripple_effect=True,
+                )
+                food_header.add_widget(icon)
+                history_layout.add_widget(food_header)
+                index+=1
+                # print(food_header)
+        else:
+            no_entry = TwoLineAvatarListItem(
+                #TODO: need to test this functionality
+                text="No entries to date!"
+            )
+            history_layout.add_widget(no_entry)
+
+        # makes the widgets scrollable
+        scroll.add_widget(history_layout)
+        layout.add_widget(scroll)
+        for button_text in ["DELETE ENTRY", "CHANGE ENTRY"]:
+            button_layout.add_widget(
+                MDRaisedButton(
+                    text=button_text, on_release=self.on_button_press, size_hint=(1,1),
+                    md_bg_color=(193 / 255, 154 / 255, 221 / 255, 1)
+                )
+            )
+        close_button = MDRaisedButton(text="Close", md_bg_color=(193 / 255, 154 / 255, 221 / 255, 1), size_hint=(1, 0.14))
+        layout.add_widget(button_layout)
+        layout.add_widget(close_button)
+
+        self.edit_popup = Popup(title='Edit Entries (Hold Row to Select)',
+                      content=layout,
+                      size_hint=(None, None), size=(950, 700), background_color=(1, 1, 1, 1))
+        close_button.bind(on_press=self.edit_popup.dismiss)
+        self.edit_popup.open()
+
+    def remove_item(self, num):
+        self._daily_spent -= float(self._food_list[num].get_cost())
+        self._daily_cals -= float(self._food_list[num].get_calories())
+        self.update_daily_disp()
+        del self._food_list[num]
+
+    def remove_row(self) -> None:
+        print("success remove row")
+        if self._item_selected:
+            size = len(self._food_list)
+            num = size - self._selected_index
+
+            self.remove_item(num)
+            self.update_csv(num)
+
+            self._item_selected = False
 
     def change_row(self) -> None:
         print("CHANGE ROW SUCCESS")
@@ -654,99 +747,6 @@ class MyApp(MDApp):
         obj = None
         self.view_history_button(obj)
         self.edit_row()
-
-    def remove_item(self, num):
-        self._daily_spent -= float(self._food_list[num].get_cost())
-        self._daily_cals -= float(self._food_list[num].get_calories())
-        self.update_daily_disp()
-        del self._food_list[num]
-
-    def remove_row(self) -> None:
-        print("success remove row")
-        if self._item_selected:
-            size = len(self._food_list)
-            num = size - self._selected_index
-
-            self.remove_item(num)
-            self.update_csv(num)
-
-            self._item_selected = False
-
-    def edit_row(self) -> None:
-        print("success edit row")
-
-        layout = GridLayout(rows=3, spacing="1dp")
-        button_layout = GridLayout(cols=2, size_hint=(1, 0.14),spacing="1dp")
-        scroll = ScrollView()
-        history_layout = Builder.load_string(list_helper)
-
-        index = 1
-        # retrieves item information from food list. adds each item as its own text widget
-        if (len(self._food_list) > 0):
-            for item in reversed( self._food_list):
-                icon = IconLeftWidget(icon="checkbox-blank-circle")
-                food_header = TwoLineAvatarListItem(
-                    text=item.get_name(),
-                    text_color=( 1, 1, 1, 0),
-                    on_press=lambda x, smth = index: self.item_press(smth),
-                    secondary_text=item.get_date(),
-                    size_hint=(None, None),
-                    size=(900, 450),
-                    _no_ripple_effect=True,
-                )
-                food_header.add_widget(icon)
-                history_layout.add_widget(food_header)
-                index+=1
-                # print(food_header)
-        else:
-            no_entry = TwoLineAvatarListItem(
-                #TODO: need to test this functionality
-                text="No entries to date!"
-            )
-            history_layout.add_widget(no_entry)
-
-        # makes the widgets scrollable
-        scroll.add_widget(history_layout)
-        layout.add_widget(scroll)
-        for button_text in ["DELETE ENTRY", "CHANGE ENTRY"]:
-            button_layout.add_widget(
-                MDRaisedButton(
-                    text=button_text, on_release=self.on_button_press, size_hint=(1,1),
-                    md_bg_color=(193 / 255, 154 / 255, 221 / 255, 1)
-                )
-            )
-        close_button = MDRaisedButton(text="Close", md_bg_color=(193 / 255, 154 / 255, 221 / 255, 1), size_hint=(1, 0.14))
-        layout.add_widget(button_layout)
-        layout.add_widget(close_button)
-
-        self.edit_popup = Popup(title='Edit Entries (Hold Row to Select)',
-                      content=layout,
-                      size_hint=(None, None), size=(950, 700), background_color=(1, 1, 1, 1))
-        close_button.bind(on_press=self.edit_popup.dismiss)
-        self.edit_popup.open()
-
-    def item_press(self, num):
-        self.index_press = num
-
-    def set_index(self):
-        if(self._item_selected):
-            self._selected_index = self.index_press
-
-    def on_selected(self, instance_selection_list, instance_selection_item):
-        if len(instance_selection_list.get_selected_list_items()) > 1:
-            instance_selection_item.do_unselected_item()
-        if len(instance_selection_list.get_selected_list_items()) == 1 and not self._item_selected:
-            self._item_selected = True
-            self.set_index()
-        if len(instance_selection_list.get_selected_list_items()) == 0:
-            self._item_selected = False
-        print(self._selected_index)
-
-    def on_unselected(self, instance_selection_list, instance_selection_item):
-        if len(instance_selection_list.get_selected_list_items()) == 0:
-            print("VALUE RESET")
-            self._item_selected = False
-            # self._selection_list = instance_selection_list.get_selected_list_items()
 
     # view history by date:
     def view_history_button(self, instance):
