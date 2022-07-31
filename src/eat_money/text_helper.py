@@ -16,7 +16,7 @@ MDTextField:
 
 food_helper = """
 MDTextField:
-    hint_text: "Enter Food Name(s)"
+    hint_text: "Enter Food"
     helper_text_mode: "on_focus"
     multiline:False
 """
@@ -43,11 +43,11 @@ MDBoxLayout:
     
     GridLayout:
         rows: 3
-        
+        md_bg_color: 0,0,0,1
         MDTextField:
             hint_text: "Enter Date"
             helper_text: "YYYY-MM-DD"
-            helper_text_mode: "persistent"
+            helper_text_mode: "on_focus"
             multiline:False
         
         MDTextField:

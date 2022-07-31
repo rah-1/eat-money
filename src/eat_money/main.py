@@ -53,6 +53,9 @@ class MyApp(MDApp):
         self.date = None
         self.cost = None
         self.food = None
+        self._item_selected = False
+        self._selected_index = None
+        self.index_press = None
 
         # window title
         self.title = "Eat Money"
@@ -88,7 +91,7 @@ class MyApp(MDApp):
         # layout convention: grid
         # this means that each of the widgets (labels, buttons, etc.)
         # will each fit somewhere in the "grid" (makes things easier to orient)
-        self.window = GridLayout()
+        self.window = GridLayout(spacing="1dp")
         self.window.cols = 1
         self.window.size_hint = (0.5, 0.7)
         self.window.pos_hint = {"center_x": 0.5, "center_y": 0.5}
@@ -140,40 +143,40 @@ class MyApp(MDApp):
         self.window.add_widget(self.input_field)
 
         # button widget to submit text entry
-        self.submit_button = Button(
+        self.submit_button = MDRaisedButton(
             text="SUBMIT FOOD",
             size_hint=(1, 0.5),
-            bold=True,
-            background_color='#C19ADD',
+            md_bg_color=(67/255,53/255,76/255,1),
+            _no_ripple_effect=True
         )
         self.submit_button.bind(on_release=self.big_button_press)
         self.window.add_widget(self.submit_button)
 
         # button widget to access stats (implementation currently tentative)
-        self.stats_button = Button(
+        self.stats_button = MDRaisedButton(
             text="VIEW STATS",
             size_hint=(1, 0.5),
-            bold=True,
-            background_color='#C19ADD',
+            md_bg_color=(67/255,53/255,76/255,1),
+            _no_ripple_effect=True
         )
         self.stats_button.bind(on_release=self.view_stats_button)
         self.window.add_widget(self.stats_button)
 
         # button widget to view history (implementation also tentative)
-        self.history_button = Button(
+        self.history_button = MDRaisedButton(
             text="VIEW HISTORY",
             size_hint=(1, 0.5),
-            bold=True,
-            background_color='#C19ADD',
+            md_bg_color=(67/255,53/255,76/255,1),
+            _no_ripple_effect=True
         )
         self.history_button.bind(on_release=self.view_history_button)
         self.window.add_widget(self.history_button)
 
-        self.theme_button = Button(
+        self.theme_button = MDRaisedButton(
             text="CHANGE THEME",
             size_hint=(1, 0.5),
-            bold=True,
-            background_color='#C19ADD',
+            md_bg_color=(67/255,53/255,76/255,1),
+            _no_ripple_effect=True
         )
         self.theme_button.bind(on_release=self.change_theme_button)
         self.window.add_widget(self.theme_button)
@@ -252,12 +255,13 @@ class MyApp(MDApp):
 
     # input validation for cost field entry
     # checks whether a valid float was entered
-    def check_valid_cost(self, entry):
+    def check_valid_cost(self, entry, usage):
         try:
             cost = float(entry)
             return True
         except ValueError:
-            self.infobox.text = "please enter a valid cost!"
+            if usage:
+                self.infobox.text = "please enter a valid cost!"
             return False
 
     def calc_old_data_daily(self):
@@ -285,7 +289,7 @@ class MyApp(MDApp):
         # this first (if) block runs when we are at the submit cost menu
         # the second (else) block runs when we are at the submit food menu
         if self._first_click:
-            if self.check_valid_cost(self.input_field.text):
+            if self.check_valid_cost(self.input_field.text, True):
                 self.submit_button.text = "SUBMIT FOOD"
                 self._curr_cost = self.input_field.text
                 self._first_click = False
@@ -503,77 +507,197 @@ class MyApp(MDApp):
     def change_row(self) -> None:
         print("CHANGE ROW SUCCESS")
 
-        print("success add row")
-        layout = GridLayout(rows=5)
-        buttons = GridLayout(cols=2)
+        if self._item_selected:
+            size = len(self._food_list)
+            item = self._food_list[size-self._selected_index]
+            layout = GridLayout(rows=5)
+            buttons = GridLayout(cols=2)
 
-        self.date = Builder.load_string(date_helper)
-        self.food = Builder.load_string(food_helper)
-        self.cost = Builder.load_string(cost_helper)
+            self.date = Builder.load_string(date_helper)
+            self.food = Builder.load_string(food_helper)
+            self.cost = Builder.load_string(cost_helper)
 
-        close_button = MDFlatButton(text="Close")
-        submit_button = MDFlatButton(text="Submit", on_release=self.update_entry)
+            self.date.text = item.get_date()
+            self.food.text = item.get_name()
+            self.cost.text = item.get_cost()
 
-        buttons.add_widget(close_button)
-        buttons.add_widget(submit_button)
+            close_button = MDFlatButton(text="Close")
+            submit_button = MDFlatButton(text="Save", on_release=self.check_entry)
 
-        layout.add_widget(self.date)
-        layout.add_widget(self.food)
-        layout.add_widget(self.cost)
-        layout.add_widget(buttons)
-        popup = Popup(title='Add Entry',
-                      content=layout,
-                      size_hint=(None, None), size=(800, 500))
-        close_button.bind(on_press=popup.dismiss)
-        popup.open()
+            buttons.add_widget(submit_button)
+            buttons.add_widget(close_button)
 
-    def update_entry(self, instance):
-        print("UPDATE ENTRY")
+            layout.add_widget(self.date)
+            layout.add_widget(self.food)
+            layout.add_widget(self.cost)
+            layout.add_widget(buttons)
+
+            self.change_status = Label(
+                text="Change entry details",
+                font_size=16,
+                color='#FFFFFF',
+                halign='center'
+            )
+            layout.add_widget(self.change_status)
+            self.change_popup = Popup(title='Add Entry',
+                          content=layout,
+                          size_hint=(None, None), size=(800, 550))
+            close_button.bind(on_press=self.change_popup.dismiss)
+            self.change_popup.open()
+
+    def check_entry(self, instance):
+        # print("UPDATE ENTRY")
+        size = len(self._food_list)
+        num = size - self._selected_index
+        item = self._food_list[num]
+        move_foward = True
+        food_list = []
+
+        # print(type(self.food.text))
+
+        self.food.text = self.food.text.strip()
+        self.date.text = self.date.text.strip()
+        self.cost.text = self.cost.text.strip()
+        # print(self.food.text)
+
+        if self.date.text != "" or self.cost.text != "" or self.food.text != "":
+            if not self.check_valid_cost(self.cost.text,False):
+                move_foward = False
+                self.cost.text = item.get_cost()
+                print("COST FAILED")
+
+            if not self.check_date(self.date.text):
+                move_foward = False
+                self.date.text = item.get_date()
+                print("DATE FAILED")
+
+            if not self.food.text.isalpha():
+                move_foward = False
+                self.food.text = item.get_name()
+                print("FOOD FAILED")
+            else:
+                food_list = find_food_data(self.food.text, self.date.text, self.cost.text)
+
+            if len(food_list) == 0 or len(food_list) > 1:
+                move_foward = False
+
+        #TODO: get rid of pressing space to exit pop-up
+
+        if self.cost.text == item.get_cost().strip() and self.date.text == item.get_date().strip() and self.food.text == item.get_name().strip():
+            self.change_status.text = "No New Information Entered!"
+        elif not move_foward:
+            self.change_status.text = "Please enter valid information!"
+            if len(food_list) == 0:
+                self.change_status.text += " Unable to locate " + self.food.text + " in database!"
+                self.food.text = item.get_name()
+            if len(food_list) > 1:
+                self.change_status.text += " Too many food items listed!"
+                self.food.text = item.get_name()
+        else:
+            self.change_status.text = "Entry successfully changed!"
+            self.remove_item(num)
+            item = food_list[0]
+            data_entry = [item.get_date(), item.get_name(), item.get_cost(), item.get_calories(),
+                          item.get_carbs(), item.get_protein(), item.get_fat(), item.get_sugar(), item.get_sodium()]
+            self.add_new_data(data_entry)
+            self._food_list.append(item)
+            self._food_list.sort(key=lambda x: x.get_date())
+            self._daily_cals += float(item.get_calories())
+            self._daily_spent += float(item.get_cost())
+            self.update_daily_disp()
+            # add data to data entry(csv)
+            # add data to food_list
+            self.update_csv(num)
+            # sort list
+            #update item entry
+            self.change_popup.dismiss()
+            self._item_selected = False
+
+
+        #check if entry statements are valid
+
+    def check_date(self, date):
+        for count, element in enumerate(date):
+            if len(date) != 10:
+                return False
+            if (count >= 0 and count <= 3) or count == 5 or count == 6 or count == 8 or count == 9:
+                # print(element)
+                if not element.isdigit():
+                    return False
+                    # print(count + " ERROR" + element)
+            if count == 4 or count == 7:
+                # print(element)
+                if element != "-":
+                    # print(count + " ERROR" + element)
+                    return False
+        return True
+
+    def update_csv(self, num):
+        lines = []
+        count = 0
+        with open('data.csv', 'r') as readFile:
+            print("OPENED FILE")
+            reader = csv.reader(readFile)
+            for row in reader:
+                if (num + 1) != count:
+                    lines.append(row)
+                    # print(row)
+                count += 1
+
+        with open('data.csv', 'w', newline='') as writeFile:
+            # print("WRITE FILE")
+            writer = csv.writer(writeFile)
+            writer.writerows(lines)
+
+        self.edit_popup.dismiss()
+        self.history_popup.dismiss()
+        obj = None
+        self.view_history_button(obj)
+        self.edit_row()
+
+    def remove_item(self, num):
+        self._daily_spent -= float(self._food_list[num].get_cost())
+        self._daily_cals -= float(self._food_list[num].get_calories())
+        self.update_daily_disp()
+        del self._food_list[num]
 
     def remove_row(self) -> None:
         print("success remove row")
-        size = len(self._food_list)
-        list = self._selection_list
-        for item in list:
-            print(item[0])
-            del self._food_list[size - int(item[0])]
-            print(size - int(item[0]))
-            lines = []
-            count = 0
-            with open('data.csv', 'r') as readFile:
-                print("OPENED FILE")
-                reader = csv.reader(readFile)
-                for row in reader:
-                    if (size - int(item[0])+1) != count:
-                        lines.append(row)
-                        print(row)
-                    count+=1
+        if self._item_selected:
+            size = len(self._food_list)
+            num = size - self._selected_index
 
-            with open('data.csv', 'w', newline='') as writeFile:
-                print("WRITE FILE")
-                writer = csv.writer(writeFile)
-                writer.writerows(lines)
+            self.remove_item(num)
+            self.update_csv(num)
+
+            self._item_selected = False
 
     def edit_row(self) -> None:
         print("success edit row")
 
-        layout = GridLayout(rows=3)
-        button_layout = GridLayout(cols=2)
-        scroll = ScrollView(size_hint=(1, None),size=(900, 450))
+        layout = GridLayout(rows=3, spacing="1dp")
+        button_layout = GridLayout(cols=2, size_hint=(1, 0.14),spacing="1dp")
+        scroll = ScrollView()
         history_layout = Builder.load_string(list_helper)
 
+        index = 1
         # retrieves item information from food list. adds each item as its own text widget
         if (len(self._food_list) > 0):
-            for item in self._food_list:
+            for item in reversed( self._food_list):
                 icon = IconLeftWidget(icon="checkbox-blank-circle")
                 food_header = TwoLineAvatarListItem(
                     text=item.get_name(),
                     text_color=( 1, 1, 1, 0),
+                    on_press=lambda x, smth = index: self.item_press(smth),
                     secondary_text=item.get_date(),
+                    size_hint=(None, None),
+                    size=(900, 450),
                     _no_ripple_effect=True,
                 )
                 food_header.add_widget(icon)
                 history_layout.add_widget(food_header)
+                index+=1
+                # print(food_header)
         else:
             no_entry = TwoLineAvatarListItem(
                 #TODO: need to test this functionality
@@ -587,36 +711,47 @@ class MyApp(MDApp):
         for button_text in ["DELETE ENTRY", "CHANGE ENTRY"]:
             button_layout.add_widget(
                 MDRaisedButton(
-                    text=button_text, on_release=self.on_button_press, size_hint=(1, None),
+                    text=button_text, on_release=self.on_button_press, size_hint=(1,1),
                     md_bg_color=(193 / 255, 154 / 255, 221 / 255, 1)
                 )
             )
-        close_button = MDRaisedButton(text="Close", md_bg_color=(173 / 255, 134 / 255, 201 / 255, 1), size_hint=(1, 1))
+        close_button = MDRaisedButton(text="Close", md_bg_color=(193 / 255, 154 / 255, 221 / 255, 1), size_hint=(1, 0.14))
         layout.add_widget(button_layout)
         layout.add_widget(close_button)
 
-        popup = Popup(title='EDIT ENTRIES (Hold Row to Select)',
+        self.edit_popup = Popup(title='Edit Entries (Hold Row to Select)',
                       content=layout,
-                      size_hint=(None, None), size=(700, 700), background_color=(1, 1, 1, 1))
-        close_button.bind(on_press=popup.dismiss)
-        popup.open()
+                      size_hint=(None, None), size=(950, 700), background_color=(1, 1, 1, 1))
+        close_button.bind(on_press=self.edit_popup.dismiss)
+        self.edit_popup.open()
+
+    def item_press(self, num):
+        self.index_press = num
+
+    def set_index(self):
+        if(self._item_selected):
+            self._selected_index = self.index_press
 
     def on_selected(self, instance_selection_list, instance_selection_item):
         if len(instance_selection_list.get_selected_list_items()) > 1:
             instance_selection_item.do_unselected_item()
-        print(len(instance_selection_list.get_selected_list_items()))
-        # print(instance_selection_list.get_selected_list_items())
-        # self._selection_list=instance_selection_list.get_selected_list_items()
+        if len(instance_selection_list.get_selected_list_items()) == 1 and not self._item_selected:
+            self._item_selected = True
+            self.set_index()
+        if len(instance_selection_list.get_selected_list_items()) == 0:
+            self._item_selected = False
+        print(self._selected_index)
 
     def on_unselected(self, instance_selection_list, instance_selection_item):
-        if instance_selection_list.get_selected_list_items():
-            print(len(instance_selection_list.get_selected_list_items()))
+        if len(instance_selection_list.get_selected_list_items()) == 0:
+            print("VALUE RESET")
+            self._item_selected = False
             # self._selection_list = instance_selection_list.get_selected_list_items()
 
     # view history by date:
     def view_history_button(self, instance):
         self.reset_user_entry()
-        layout = GridLayout(rows=3)
+        layout = GridLayout(rows=3, spacing="1dp")
 
         # retrieves item information from food list. adds each item as its own text widget
         history_list = []
@@ -648,16 +783,16 @@ class MyApp(MDApp):
         #add buttons to edit history
         layout.add_widget(self.data_tables)
         edit_button = MDRaisedButton(
-                    text="EDIT ENTRIES", on_release=self.on_button_press, size_hint=(1,None),md_bg_color=(193/255,154/255,221/255,1)
+                    text="EDIT ENTRIES", on_release=self.on_button_press, size_hint=(1,0.5),md_bg_color=(193/255,154/255,221/255,1)
                 )
-        close_button = MDRaisedButton(text="Close", md_bg_color=(173/255,134/255,201/255,1),size_hint=(1,1))
+        close_button = MDRaisedButton(text="Close", md_bg_color=(193/255,154/255,221/255,1),size_hint=(1,0.5))
         layout.add_widget(edit_button)
         layout.add_widget(close_button)
-        self.popup = Popup(title='History',
+        self.history_popup = Popup(title='History',
                       content=layout,
                       size_hint=(None, None), size=(950, 700))
-        close_button.bind(on_press=self.popup.dismiss)
-        self.popup.open()
+        close_button.bind(on_press=self.history_popup.dismiss)
+        self.history_popup.open()
 
     def change_theme_button(self, instance):
         self.reset_user_entry()
