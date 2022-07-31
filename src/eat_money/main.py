@@ -100,7 +100,7 @@ class MyApp(MDApp):
         self.window.add_widget(self.header)
 
         self.date = Label(
-            text=self._today.strftime("%B %d, %Y"),
+            text=self._today.strftime("\n%B %d, %Y"),
             font_size=20,
             color='#8CA262',
             halign='center'
