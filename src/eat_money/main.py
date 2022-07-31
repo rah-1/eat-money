@@ -541,7 +541,7 @@ class MyApp(MDApp):
             for item in reversed( self._food_list):
                 icon = IconLeftWidget(icon="checkbox-blank-circle")
                 food_header = TwoLineAvatarListItem(
-                    text=item.get_name(),
+                    text=item.get_name() + " ($" + item.get_cost() + ")",
                     text_color=( 1, 1, 1, 0),
                     on_press=lambda x, smth = index: self.item_press(smth),
                     secondary_text=item.get_date(),
@@ -575,8 +575,10 @@ class MyApp(MDApp):
         layout.add_widget(close_button)
 
         self.edit_popup = Popup(title='Edit Entries (Hold Row to Select)',
-                      content=layout,
-                      size_hint=(None, None), size=(950, 700), background_color=(1, 1, 1, 1))
+                                title_color=( 0, 0, 0, 1),
+                                content=layout,
+                                background='',
+                                size_hint=(None, None), size=(950, 700))
         close_button.bind(on_press=self.edit_popup.dismiss)
         self.edit_popup.open()
 
@@ -614,8 +616,15 @@ class MyApp(MDApp):
             self.food.text = item.get_name()
             self.cost.text = item.get_cost()
 
-            close_button = MDFlatButton(text="Close")
-            submit_button = MDFlatButton(text="Save", on_release=self.check_entry)
+            close_button = MDRectangleFlatButton(text="Close",
+                                                 theme_text_color="Custom",
+                                                 text_color=(193 / 255, 154 / 255, 221 / 255, 1),
+                                                 line_color=(193 / 255, 154 / 255, 221 / 255, 1))
+            submit_button = MDFlatButton(text="Save",
+                                         theme_text_color="Custom",
+                                         text_color=(193 / 255, 154 / 255, 221 / 255, 1),
+                                         line_color=(193 / 255, 154 / 255, 221 / 255, 1),
+                                         on_release=self.check_entry)
 
             buttons.add_widget(submit_button)
             buttons.add_widget(close_button)
@@ -633,8 +642,10 @@ class MyApp(MDApp):
             )
             layout.add_widget(self.change_status)
             self.change_popup = Popup(title='Add Entry',
-                          content=layout,
-                          size_hint=(None, None), size=(800, 550))
+                                      background='',
+                                      title_color=(0, 0, 0, 1),
+                                      content=layout,
+                                      size_hint=(None, None), size=(800, 550))
             close_button.bind(on_press=self.change_popup.dismiss)
             self.change_popup.open()
 
@@ -669,7 +680,14 @@ class MyApp(MDApp):
                 self.food.text = item.get_name()
                 print("FOOD FAILED")
             else:
-                food_list = find_food_data(self.food.text, self.date.text, self.cost.text)
+                if self.food.text == item.get_name():
+                    print("SAME ITEM")
+                    food = Food(self.date.text, item.get_name(), self.cost.text, item.get_calories(),
+                                  item.get_carbs(), item.get_protein(), item.get_fat(), item.get_sugar(),
+                                  item.get_sodium())
+                    food_list.append(food)
+                else:
+                    food_list = find_food_data(self.food.text, self.date.text, self.cost.text)
 
             if len(food_list) == 0 or len(food_list) > 1:
                 move_foward = False
@@ -687,17 +705,17 @@ class MyApp(MDApp):
                 self.change_status.text += " Too many food items listed!"
                 self.food.text = item.get_name()
         else:
-            self.change_status.text = "Entry successfully changed!"
             self.remove_item(num)
-            item = food_list[0]
-            data_entry = [item.get_date(), item.get_name(), item.get_cost(), item.get_calories(),
-                          item.get_carbs(), item.get_protein(), item.get_fat(), item.get_sugar(), item.get_sodium()]
+            food = food_list[0]
+            data_entry = [food.get_date(), food.get_name(), food.get_cost(), food.get_calories(),
+                          food.get_carbs(), food.get_protein(), food.get_fat(), food.get_sugar(), food.get_sodium()]
             self.add_new_data(data_entry)
-            self._food_list.append(item)
+            self._food_list.append(food)
             self._food_list.sort(key=lambda x: x.get_date())
             self._daily_cals += float(item.get_calories())
             self._daily_spent += float(item.get_cost())
             self.update_daily_disp()
+            self.change_status.text = "Entry successfully changed!"
             # add data to data entry(csv)
             # add data to food_list
             self.update_csv(num)
@@ -761,7 +779,7 @@ class MyApp(MDApp):
         # this framework is limited and has bugs
         # datatables is weird: in order to click the check all without there being a bug, the number of rows must be displayed on the screen
         #TODO: change the rows_num=2 to a diff number (figure out how to format? for diff screens:
-        self.data_tables = MDDataTable(size_hint=(None, None),
+        self.data_tables = MDDataTable(size_hint=(1, None),
                                        size=(900, 450),
                                        use_pagination=True,
                                        rows_num=5,
@@ -789,8 +807,11 @@ class MyApp(MDApp):
         layout.add_widget(edit_button)
         layout.add_widget(close_button)
         self.history_popup = Popup(title='History',
-                      content=layout,
-                      size_hint=(None, None), size=(950, 700))
+                                   content=layout,
+                                   title_color=(0, 0, 0, 1),
+                                   size_hint=(None, None), size=(950, 700),
+                                   background = ''
+                                   )
         close_button.bind(on_press=self.history_popup.dismiss)
         self.history_popup.open()
 

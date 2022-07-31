@@ -36,6 +36,7 @@ MDSelectionList:
     icon_bg_color: app.theme_color
     on_selected: app.on_selected(*args)
     on_unselected: app.on_unselected(*args)
+    
 """
 
 change_dialog = """
@@ -47,11 +48,12 @@ MDBoxLayout:
         MDTextField:
             hint_text: "Enter Date"
             helper_text: "YYYY-MM-DD"
-            helper_text_mode: "on_focus"
+            helper_text_mode: "persistent"
             multiline:False
         
         MDTextField:
             hint_text: "Enter Food Name(s)"
+            helper_text: "Only Enter One Item"
             helper_text_mode: "on_focus"
             multiline:False
             
