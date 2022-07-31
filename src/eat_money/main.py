@@ -1,13 +1,13 @@
 from datetime import date
 import os
-import pandas as pd
 
 from kivy.uix.anchorlayout import AnchorLayout
+from kivymd.uix.selection import MDSelectionList
 from kivymd.uix.toolbar import MDToolbar, MDBottomAppBar
 
 from eat_money.food import Food
 from eat_money.CalorieNinja import find_food_data
-from text_helper import input_helper,date_helper,food_helper,cost_helper
+from text_helper import input_helper, date_helper, food_helper, cost_helper, list_helper
 
 #TODO: will need to add kivymd in project requirements/packaging
 from kivymd.app import MDApp
@@ -17,13 +17,16 @@ from kivymd.uix.floatlayout import MDFloatLayout
 from kivymd.uix.button import MDRaisedButton, MDFlatButton
 from kivymd.uix.button import MDRectangleFlatButton
 from kivymd.uix.label import Label
-from kivymd.uix.list import MDList, TwoLineListItem
+from kivymd.uix.list import MDList, TwoLineAvatarListItem
+from kivymd.uix.list import IconLeftWidget
 from kivymd.uix.dialog import MDDialog
 from kivymd.uix.datatables import MDDataTable
 from kivy.metrics import dp
 
 
 from kivy.app import App
+from kivy.animation import Animation
+from kivy.utils import get_color_from_hex
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.image import Image
 from kivy.uix.label import Label
@@ -43,8 +46,13 @@ import csv
 Config.set('graphics', 'resizable', True)
 
 class MyApp(MDApp):
+    theme_color = get_color_from_hex('#8CA262')
     def build(self):
         Window.bind(on_keyboard=self.dismiss_popup_key_press)
+        self._selection_list = []
+        self.date = None
+        self.cost = None
+        self.food = None
 
         # window title
         self.title = "Eat Money"
@@ -486,15 +494,46 @@ class MyApp(MDApp):
         try:
             {
                 "DELETE ENTRY": self.remove_row,
-                "EDIT ENTRY": self.edit_row,
+                "EDIT ENTRIES": self.edit_row,
+                "CHANGE ENTRY": self.change_row,
             }[instance_button.text]()
         except KeyError:
             pass
 
+    def change_row(self) -> None:
+        print("CHANGE ROW SUCCESS")
+
+        print("success add row")
+        layout = GridLayout(rows=5)
+        buttons = GridLayout(cols=2)
+
+        self.date = Builder.load_string(date_helper)
+        self.food = Builder.load_string(food_helper)
+        self.cost = Builder.load_string(cost_helper)
+
+        close_button = MDFlatButton(text="Close")
+        submit_button = MDFlatButton(text="Submit", on_release=self.update_entry)
+
+        buttons.add_widget(close_button)
+        buttons.add_widget(submit_button)
+
+        layout.add_widget(self.date)
+        layout.add_widget(self.food)
+        layout.add_widget(self.cost)
+        layout.add_widget(buttons)
+        popup = Popup(title='Add Entry',
+                      content=layout,
+                      size_hint=(None, None), size=(800, 500))
+        close_button.bind(on_press=popup.dismiss)
+        popup.open()
+
+    def update_entry(self, instance):
+        print("UPDATE ENTRY")
+
     def remove_row(self) -> None:
         print("success remove row")
         size = len(self._food_list)
-        list = self.data_tables.get_row_checks()
+        list = self._selection_list
         for item in list:
             print(item[0])
             del self._food_list[size - int(item[0])]
@@ -515,64 +554,69 @@ class MyApp(MDApp):
                 writer = csv.writer(writeFile)
                 writer.writerows(lines)
 
-
-            # print("print food list")
-        # for item in self._food_list:
-        #     print(item.get_name())
-
-        obj=None
-        self.popup.dismiss()
-        self.view_history_button(obj)
-
     def edit_row(self) -> None:
         print("success edit row")
-        #df.set_value(0,"Name3",new_value)
 
-    def check_press(self, instance, current_row):
-        #instance willl have the table data of where the check is pressed
-        #current_row contains the values of where the row is pressed
-        # print(instance)
-        print("pressed check")
-        # list = self.data_tables.get_row_checks()
-        # for item in list:
-        #     print(item[0])
-    #
-    # def row_press(self, instance, all_rows):
-    #     print(all_rows)
+        layout = GridLayout(rows=3)
+        button_layout = GridLayout(cols=2)
+        scroll = ScrollView(size_hint=(1, None),size=(900, 450))
+        history_layout = Builder.load_string(list_helper)
 
+        # retrieves item information from food list. adds each item as its own text widget
+        if (len(self._food_list) > 0):
+            for item in self._food_list:
+                icon = IconLeftWidget(icon="checkbox-blank-circle")
+                food_header = TwoLineAvatarListItem(
+                    text=item.get_name(),
+                    text_color=( 1, 1, 1, 0),
+                    secondary_text=item.get_date(),
+                    _no_ripple_effect=True,
+                )
+                food_header.add_widget(icon)
+                history_layout.add_widget(food_header)
+        else:
+            no_entry = TwoLineAvatarListItem(
+                #TODO: need to test this functionality
+                text="No entries to date!"
+            )
+            history_layout.add_widget(no_entry)
+
+        # makes the widgets scrollable
+        scroll.add_widget(history_layout)
+        layout.add_widget(scroll)
+        for button_text in ["DELETE ENTRY", "CHANGE ENTRY"]:
+            button_layout.add_widget(
+                MDRaisedButton(
+                    text=button_text, on_release=self.on_button_press, size_hint=(1, None),
+                    md_bg_color=(193 / 255, 154 / 255, 221 / 255, 1)
+                )
+            )
+        close_button = MDRaisedButton(text="Close", md_bg_color=(173 / 255, 134 / 255, 201 / 255, 1), size_hint=(1, 1))
+        layout.add_widget(button_layout)
+        layout.add_widget(close_button)
+
+        popup = Popup(title='EDIT ENTRIES (Hold Row to Select)',
+                      content=layout,
+                      size_hint=(None, None), size=(700, 700), background_color=(1, 1, 1, 1))
+        close_button.bind(on_press=popup.dismiss)
+        popup.open()
+
+    def on_selected(self, instance_selection_list, instance_selection_item):
+        if len(instance_selection_list.get_selected_list_items()) > 1:
+            instance_selection_item.do_unselected_item()
+        print(len(instance_selection_list.get_selected_list_items()))
+        # print(instance_selection_list.get_selected_list_items())
+        # self._selection_list=instance_selection_list.get_selected_list_items()
+
+    def on_unselected(self, instance_selection_list, instance_selection_item):
+        if instance_selection_list.get_selected_list_items():
+            print(len(instance_selection_list.get_selected_list_items()))
+            # self._selection_list = instance_selection_list.get_selected_list_items()
 
     # view history by date:
     def view_history_button(self, instance):
         self.reset_user_entry()
-
-        # retrieves item information from food list. adds each item as its own text widget
-        history_list = []
-        for item in self._food_list:
-            history_list.append((item.get_date(),item.get_name(),item.get_calories(),"$%s"%item.get_cost(), item.get_carbs(), item.get_protein(), item.get_fat(), item.get_sugar(), item.get_sodium()))
-
-        table = MDDataTable(pos_hint={'center_x':0.5,'center_y':0.5},
-                            column_data=[
-                                ("Date", dp(20)),
-                                ("Food", dp(25)),
-                                ("Calories", dp(20)),
-                                ("Cost", dp(15)),
-                                ("Carbs",dp(20)),
-                                ("Protein",dp(20)),
-                                ("Fat", dp(20)),
-                                ("Sugar", dp(20)),
-                                ("Sodium", dp(20))
-                            ],
-        row_data = history_list
-        )
-        scroll = ScrollView(size_hint=(1, 1), size=(500, 550))
-        scroll.add_widget(table)
-        # makes the widgets scrollable
-        popup = Popup(title='History',
-                      content=scroll,
-                      size_hint=(None, None), size=(500, 400))
-        popup.open()
         layout = GridLayout(rows=3)
-        button_layout = GridLayout(cols=2)
 
         # retrieves item information from food list. adds each item as its own text widget
         history_list = []
@@ -584,9 +628,8 @@ class MyApp(MDApp):
         #TODO: change the rows_num=2 to a diff number (figure out how to format? for diff screens:
         self.data_tables = MDDataTable(size_hint=(None, None),
                                        size=(900, 450),
-                                       check=True,
                                        use_pagination=True,
-                                       rows_num=2,
+                                       rows_num=5,
                                        column_data=[
                                             ("No.", dp(20)),
                                             ("Date", dp(20)),
@@ -602,19 +645,13 @@ class MyApp(MDApp):
                                         row_data = history_list,
                                         )
 
-        self.data_tables.bind(on_check_press=self.check_press)
-        # self.data_tables.bind(on_row_press=self.row_press)
-
         #add buttons to edit history
         layout.add_widget(self.data_tables)
-        for button_text in ["DELETE ENTRY", "EDIT ENTRY"]:
-            button_layout.add_widget(
-                MDRaisedButton(
-                    text=button_text, on_release=self.on_button_press, size_hint=(1,None),md_bg_color=(193/255,154/255,221/255,1)
+        edit_button = MDRaisedButton(
+                    text="EDIT ENTRIES", on_release=self.on_button_press, size_hint=(1,None),md_bg_color=(193/255,154/255,221/255,1)
                 )
-            )
         close_button = MDRaisedButton(text="Close", md_bg_color=(173/255,134/255,201/255,1),size_hint=(1,1))
-        layout.add_widget(button_layout)
+        layout.add_widget(edit_button)
         layout.add_widget(close_button)
         self.popup = Popup(title='History',
                       content=layout,
