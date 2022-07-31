@@ -29,10 +29,11 @@ from kivy.core.window import Window
 from kivy.uix.scrollview import ScrollView
 from kivy.clock import Clock
 from kivy.app import runTouchApp
-
+from timeit import timeit
 
 import json
 import csv
+import sqlite3
 
 Config.set('graphics', 'resizable', True)
 
@@ -65,7 +66,10 @@ class MyApp(MDApp):
         self._daily_spent = 0.00
         self._daily_cals = 0
         self._food_list = []
-        self.read_old_data()
+        pythonTime = timeit(
+            lambda: self.read_old_data(), number=1
+        )
+        print(pythonTime)
         self.calc_old_data_daily()
 
         # boolean variable to switch between food and cost entry
@@ -241,33 +245,78 @@ class MyApp(MDApp):
     # this is a function to read in the csv file to load old data
     # it turns the csv rows into Food objects and stores them in food_list
     def read_old_data(self):
-        with open("data.csv") as csv_file:
-            csv_reader = csv.reader(csv_file, delimiter=',')
-            line_count = 0
-            for row in csv_reader:
-                if line_count != 0:
-                    date = row[0]
-                    name = row[1]
-                    cost = row[2]
-                    calories = row[3]
-                    carbs = row[4]
-                    protein = row[5]
-                    fat = row[6]
-                    sugar = row[7]
-                    sodium = row[8]
+        sqlite_connection = sqlite3.connect("data.db")
+        sqlite_cursor = sqlite_connection.cursor()
+        sqlite_cursor.execute("""
+                CREATE TABLE IF NOT EXISTS user_nutrition_data (
+                    date text,
+                    name text,
+                    cost real,
+                    calories real,
+                    carbs real,
+                    protein real,
+                    fat real,
+                    sugar real,
+                    sodium real
+                    );""")
+        sqlite_cursor.execute("SELECT * from user_nutrition_data")
+        results = sqlite_cursor.fetchall()
+        if len(results) > 0:
+            for row in results:
+                date = row[0]
+                name = row[1]
+                cost = row[2]
+                calories = row[3]
+                carbs = row[4]
+                protein = row[5]
+                fat = row[6]
+                sugar = row[7]
+                sodium = row[8]
+                food_item = Food(date, name, cost, calories, carbs, protein, fat, sugar, sodium)
+                self._food_list.append(food_item)
+        sqlite_connection.close()
 
-                    food_item = Food(date, name, cost, calories, carbs, protein, fat, sugar, sodium)
-                    self._food_list.append(food_item)
-
-                line_count += 1
+        # with open("data.csv") as csv_file:
+        #     csv_reader = csv.reader(csv_file, delimiter=',')
+        #     line_count = 0
+        #     for row in csv_reader:
+        #         if line_count != 0:
+        #             date = row[0]
+        #             name = row[1]
+        #             cost = row[2]
+        #             calories = row[3]
+        #             carbs = row[4]
+        #             protein = row[5]
+        #             fat = row[6]
+        #             sugar = row[7]
+        #             sodium = row[8]
+        #
+        #             food_item = Food(date, name, cost, calories, carbs, protein, fat, sugar, sodium)
+        #             self._food_list.append(food_item)
+        #
+        #         line_count += 1
 
     # this function is for when we want to write new data
     # it is invoked when we submit food/cost info
     def add_new_data(self, data):
-        with open('data.csv', 'a', newline='') as f:
-            writer = csv.writer(f)
-            writer.writerow(data)
+        sqlite_connection = sqlite3.connect("data.db")
+        sqlite_cursor = sqlite_connection.cursor()
+        sql_command_string = "INSERT INTO user_nutrition_data VALUES ("
+        for i in range(len(data)):
+            if (type(data[i]) is str):
+                sql_command_string += "'" + data[i] + "'"
+            else:
+                sql_command_string += str(data[i])
+            if i != len(data) - 1:
+                sql_command_string += ", "
+        sql_command_string += ")"
+        sqlite_cursor.execute(sql_command_string)
+        sqlite_connection.commit()
+        sqlite_connection.close()
 
+        # with open('data.csv', 'a', newline='') as f:
+        #     writer = csv.writer(f)
+        #     writer.writerow(data)
     # input validation for cost field entry
     # checks whether a valid float was entered
     def check_valid_cost(self, entry, usage):
