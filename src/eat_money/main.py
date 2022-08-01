@@ -1,22 +1,32 @@
 from datetime import date
 import os
 
+from kivy.uix.anchorlayout import AnchorLayout
+from kivymd.uix.selection import MDSelectionList
 from kivymd.uix.toolbar import MDToolbar, MDBottomAppBar
 
 from eat_money.food import Food
 from eat_money.CalorieNinja import find_food_data
+from eat_money.text_helper import input_helper, date_helper, food_helper, cost_helper, list_helper
 
 #TODO: will need to add kivymd in project requirements/packaging
 from kivymd.app import MDApp
 from kivy.lang import Builder
+from kivymd.uix.boxlayout import MDBoxLayout
+from kivymd.uix.floatlayout import MDFloatLayout
+from kivymd.uix.button import MDRaisedButton, MDFlatButton
+from kivymd.uix.button import MDRectangleFlatButton
 from kivymd.uix.label import Label
-from kivymd.uix.list import MDList, TwoLineListItem
+from kivymd.uix.list import MDList, TwoLineAvatarListItem
+from kivymd.uix.list import IconLeftWidget
 from kivymd.uix.dialog import MDDialog
 from kivymd.uix.datatables import MDDataTable
 from kivy.metrics import dp
 
 
 from kivy.app import App
+from kivy.animation import Animation
+from kivy.utils import get_color_from_hex
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.image import Image
 from kivy.uix.label import Label
@@ -35,10 +45,20 @@ import json
 import csv
 
 Config.set('graphics', 'resizable', True)
+Config.set('input', 'mouse', 'mouse,multitouch_on_demand')
 
 class MyApp(MDApp):
+    theme_color = get_color_from_hex('#8CA262')
     def build(self):
         Window.bind(on_keyboard=self.dismiss_popup_key_press)
+        self._selection_list = []
+        self.date = None
+        self.cost = None
+        self.food = None
+        self._item_selected = False
+        self._selected_index = None
+        self.index_press = None
+        self.selected_obj = None
 
         # window title
         self.title = "Eat Money"
@@ -46,6 +66,10 @@ class MyApp(MDApp):
 
         # window color
         Window.clearcolor = (1, 1, 1, 1)
+        win_x, win_y = Window.size
+        Window.minimum_width = win_x
+        Window.minimum_height = win_y
+
         # these store the current name/cost based on user entry
         self._curr_name = ""
         self._curr_cost = ""
@@ -79,7 +103,7 @@ class MyApp(MDApp):
         # layout convention: grid
         # this means that each of the widgets (labels, buttons, etc.)
         # will each fit somewhere in the "grid" (makes things easier to orient)
-        self.window = GridLayout()
+        self.window = GridLayout(spacing="1dp")
         self.window.cols = 1
         self.window.size_hint = (0.5, 0.7)
         self.window.pos_hint = {"center_x": 0.5, "center_y": 0.5}
@@ -135,50 +159,51 @@ class MyApp(MDApp):
         self.window.add_widget(self.input_field)
 
         # button widget to submit text entry
-        self.submit_button = Button(
+        self.submit_button = MDRaisedButton(
             text="SUBMIT FOOD",
             size_hint=(1, 0.5),
-            bold=True,
-            background_color='#C19ADD',
+            md_bg_color=(67/255,53/255,76/255,1),
+            _no_ripple_effect=True
         )
         self.submit_button.bind(on_release=self.big_button_press)
         self.window.add_widget(self.submit_button)
 
         # button widget to access stats (implementation currently tentative)
-        self.stats_button = Button(
+        self.stats_button = MDRaisedButton(
             text="VIEW STATS",
             size_hint=(1, 0.5),
-            bold=True,
-            background_color='#C19ADD',
+            md_bg_color=(67/255,53/255,76/255,1),
+            _no_ripple_effect=True
         )
         self.stats_button.bind(on_release=self.view_stats_button)
         self.window.add_widget(self.stats_button)
 
         # button widget to view history (implementation also tentative)
-        self.history_button = Button(
+        self.history_button = MDRaisedButton(
             text="VIEW HISTORY",
             size_hint=(1, 0.5),
-            bold=True,
-            background_color='#C19ADD',
+            md_bg_color=(67/255,53/255,76/255,1),
+            _no_ripple_effect=True
         )
         self.history_button.bind(on_release=self.view_history_button)
         self.window.add_widget(self.history_button)
 
+
         # button widget for recommended caloric intake
-        self.rec_button = Button(
+        self.rec_button = MDRaisedButton(
             text="CALORIE RECOMMENDATIONS",
             size_hint=(1, 0.5),
-            bold=True,
-            background_color='#C19ADD',
+            md_bg_color=(67 / 255, 53 / 255, 76 / 255, 1),
+            _no_ripple_effect=True
         )
         self.rec_button.bind(on_release=self.view_rec_button)
         self.window.add_widget(self.rec_button)
 
-        self.theme_button = Button(
+        self.theme_button = MDRaisedButton(
             text="CHANGE THEME",
             size_hint=(1, 0.5),
-            bold=True,
-            background_color='#C19ADD',
+            md_bg_color=(67/255,53/255,76/255,1),
+            _no_ripple_effect=True
         )
         self.theme_button.bind(on_release=self.change_theme_button)
         self.window.add_widget(self.theme_button)
@@ -205,7 +230,7 @@ class MyApp(MDApp):
     # side-note: kivy closes the main window when ESC is pressed normally
     def dismiss_popup_key_press(self, key, scancode, codepoint, modifiers, idk):
         if isinstance(App.get_running_app().root_window.children[0], Popup):
-            if scancode == 27 or scancode == 32:
+            if scancode == 27:
                 App.get_running_app().root_window.children[0].dismiss()
 
 
@@ -282,8 +307,10 @@ class MyApp(MDApp):
             return False
 
     def calc_old_data_daily(self):
+        self._daily_spent = 0
+        self._daily_cals = 0
         for food in reversed(self._food_list):
-            if int(food.get_date()[8:10]) == int(date.today().day):
+            if int(food.get_date()[8:10]) == int(date.today().day) and int(food.get_date()[5:7]) == int(date.today().month) and int(food.get_date()[0:4]) == int(date.today().year):
                 self._daily_spent += float(food.get_cost())
                 self._daily_cals += float(food.get_calories())
 
@@ -663,35 +690,324 @@ class MyApp(MDApp):
         self.save_preferences()
         self.view_stats_button("new")
 
+    def on_button_press(self, instance_button: MDRaisedButton) -> None:
+        print("success button press")
+        '''Called when a control button is clicked.'''
+
+        try:
+            {
+                "EDIT ENTRIES": self.edit_row,
+                "DELETE ENTRY": self.remove_row,
+                "MODIFY ENTRY": self.change_row,
+            }[instance_button.text]()
+        except KeyError:
+            pass
+
+    def item_press(self, num):
+        self.index_press = num
+
+    def set_index(self):
+        if(self._item_selected):
+            self._selected_index = self.index_press
+
+    def unselect_item(self, instance):
+        self.selected_obj.do_unselected_item()
+        self.change_popup.dismiss()
+
+    def on_selected(self, instance_selection_list, instance_selection_item):
+        if len(instance_selection_list.get_selected_list_items()) > 1:
+            instance_selection_item.do_unselected_item()
+        if len(instance_selection_list.get_selected_list_items()) == 1 and not self._item_selected:
+            self._item_selected = True
+            self.selected_obj = instance_selection_item
+            self.set_index()
+        if len(instance_selection_list.get_selected_list_items()) == 0:
+            self._item_selected = False
+
+    def on_unselected(self, instance_selection_list, instance_selection_item):
+        if len(instance_selection_list.get_selected_list_items()) == 0:
+            self._item_selected = False
+            # self._selection_list = instance_selection_list.get_selected_list_items()
+
+    def edit_row(self) -> None:
+        #print("success edit row")
+
+        layout = GridLayout(rows=3,spacing="1dp")
+        button_layout = GridLayout(rows=2,spacing="1dp",size_hint=(1,None),size=(650,90))
+        scroll = ScrollView(size_hint=(1,None), size=(650,310))
+        history_layout = Builder.load_string(list_helper)
+
+        index = 1
+        # retrieves item information from food list. adds each item as its own text widget
+        if (len(self._food_list) > 0):
+            for item in reversed( self._food_list):
+                icon = IconLeftWidget(icon="checkbox-blank-circle")
+                food_header = TwoLineAvatarListItem(
+                    text=item.get_name() + " ($" + item.get_cost() + ")",
+                    text_color=( 1, 1, 1, 0),
+                    on_press=lambda x, smth = index: self.item_press(smth),
+                    secondary_text=item.get_date(),
+                    _no_ripple_effect=True,
+                )
+                food_header.add_widget(icon)
+                history_layout.add_widget(food_header)
+                index+=1
+                # print(food_header)
+        else:
+            no_entry = TwoLineAvatarListItem(
+                #TODO: need to test this functionality
+                text="No entries to date!"
+            )
+            history_layout.add_widget(no_entry)
+
+        # makes the widgets scrollable
+        scroll.add_widget(history_layout)
+        layout.add_widget(scroll)
+        for button_text in ["DELETE ENTRY", "MODIFY ENTRY"]:
+            button_layout.add_widget(
+                MDRaisedButton(
+                    text=button_text, on_release=self.on_button_press,size_hint=(1,1),
+                    md_bg_color=(193 / 255, 154 / 255, 221 / 255, 1)
+                )
+            )
+        close_button = MDRaisedButton(text="Close", md_bg_color=(193 / 255, 154 / 255, 221 / 255, 1), size_hint=(1,None),size=(650,90))
+        layout.add_widget(button_layout)
+        layout.add_widget(close_button)
+
+        self.edit_popup = Popup(title='Edit Entries (Hold Row to Select, Drag and Move to Scroll)',
+                                title_color=( 0, 0, 0, 1),
+                                content=layout,
+                                background='',
+                                size_hint=(None, None), size=(650, 500))
+        close_button.bind(on_press=self.edit_popup.dismiss)
+        self.edit_popup.open()
+
+    def remove_item(self, num):
+        self.calc_old_data_daily()
+        self.update_daily_disp()
+        del self._food_list[num]
+
+    def remove_row(self) -> None:
+        #print("success remove row")
+        if self._item_selected:
+            size = len(self._food_list)
+            num = size - self._selected_index
+
+            self.remove_item(num)
+            self.update_csv(num)
+
+            self._item_selected = False
+
+    def change_row(self) -> None:
+        #print("CHANGE ROW SUCCESS")
+
+        if self._item_selected:
+            size = len(self._food_list)
+            item = self._food_list[size-self._selected_index]
+            layout = GridLayout(rows=5)
+            buttons = GridLayout(cols=2)
+
+            self.date = Builder.load_string(date_helper)
+            self.food = Builder.load_string(food_helper)
+            self.cost = Builder.load_string(cost_helper)
+
+            self.date.text = item.get_date()
+            self.food.text = item.get_name()
+            self.cost.text = item.get_cost()
+
+            close_button = MDRectangleFlatButton(text="Close",
+                                                 theme_text_color="Custom",
+                                                 text_color=(193 / 255, 154 / 255, 221 / 255, 1),
+                                                 line_color=(193 / 255, 154 / 255, 221 / 255, 1))
+            submit_button = MDFlatButton(text="Save",
+                                         theme_text_color="Custom",
+                                         text_color=(193 / 255, 154 / 255, 221 / 255, 1),
+                                         line_color=(193 / 255, 154 / 255, 221 / 255, 1),
+                                         on_release=self.check_entry)
+
+            buttons.add_widget(submit_button)
+            buttons.add_widget(close_button)
+
+            layout.add_widget(self.date)
+            layout.add_widget(self.food)
+            layout.add_widget(self.cost)
+            layout.add_widget(buttons)
+
+            self.change_status = Label(
+                text="Change entry details",
+                font_size=16,
+                color='#000000',
+                halign='center'
+            )
+            layout.add_widget(self.change_status)
+            self.change_popup = Popup(title='Modify Entry',
+                                      background='',
+                                      title_color=(0, 0, 0, 1),
+                                      content=layout,
+                                      size_hint=(None, None), size=(350, 300))
+            close_button.bind(on_press=self.unselect_item)
+            self.change_popup.open()
+
+    def check_entry(self, instance):
+        # print("UPDATE ENTRY")
+        size = len(self._food_list)
+        num = size - self._selected_index
+        item = self._food_list[num]
+        move_foward = True
+        food_list = []
+
+        # print(type(self.food.text))
+
+        self.food.text = self.food.text.strip()
+        self.date.text = self.date.text.strip()
+        self.cost.text = self.cost.text.strip()
+        self.change_status.text = 'Please enter valid information!'
+        # print(self.food.text)
+        if self.date.text == "":
+            self.date.text = item.get_date()
+            move_foward = False
+        elif self.cost.text == "":
+            self.cost.text = item.get_cost()
+            move_foward = False
+        elif self.food.text == "":
+            self.food.text = item.get_name()
+            move_foward=False
+        elif self.cost.text == item.get_cost().strip() and self.date.text == item.get_date().strip() and self.food.text == item.get_name().strip():
+            self.change_status.text = "No New Information Entered!"
+            move_foward = False
+        elif not self.check_valid_cost(self.cost.text,False):
+            move_foward = False
+            self.cost.text=item.get_cost()
+        elif not self.check_date(self.date.text):
+            move_foward = False
+            self.date.text=item.get_date()
+        else:
+            if self.food.text == item.get_name():
+                #("SAME ITEM")
+                food = Food(self.date.text, item.get_name(), self.cost.text, item.get_calories(),
+                              item.get_carbs(), item.get_protein(), item.get_fat(), item.get_sugar(),
+                              item.get_sodium())
+                food_list.append(food)
+            else:
+                food_list = find_food_data(self.food.text, self.date.text, self.cost.text)
+
+                if len(food_list) == 0:
+                    self.change_status.text = " Unable to locate " + self.food.text + " in database!"
+                    move_foward = False
+                elif len(food_list) > 1:
+                    self.change_status.text = " Too many food items listed!"
+                    move_foward = False
+
+        #TODO: get rid of pressing space to exit pop-up
+
+        if not move_foward:
+            pass
+            #print('nothing')
+            # self.change_status.text = 'Please enter valid information!'
+
+        else:
+            self.remove_item(num)
+            food = food_list[0]
+            self._food_list.append(food)
+            self._food_list.sort(key=lambda x: x.get_date())
+            self.calc_old_data_daily()
+            self.update_daily_disp()
+            self.change_status.text = "Entry successfully changed!"
+            # add data to data entry(csv)
+            # add data to food_list
+            self.update_csv(num)
+            # sort list
+            #update item entry
+            self.change_popup.dismiss()
+            self._item_selected = False
+
+
+        #check if entry statements are valid
+
+    def check_date(self, date):
+        for count, element in enumerate(date):
+            if len(date) != 10:
+                return False
+            if (count >= 0 and count <= 3) or count == 5 or count == 6 or count == 8 or count == 9:
+                # print(element)
+                if not element.isdigit():
+                    return False
+                    # print(count + " ERROR" + element)
+            if count == 4 or count == 7:
+                # print(element)
+                if element != "-":
+                    # print(count + " ERROR" + element)
+                    return False
+        return True
+
+    def update_csv(self, num):
+        lines = []
+        count = 0
+        lines.append(['Date','Name','Cost','Calories','Carbs','Protein','Total Fats','Sugar','Sodium'])
+        for item in self._food_list:
+            data_entry = [item.get_date(), item.get_name(), item.get_cost(), item.get_calories(),
+                          item.get_carbs(), item.get_protein(), item.get_fat(), item.get_sugar(), item.get_sodium()]
+            lines.append(data_entry)
+
+        with open('data.csv', 'w', newline='') as writeFile:
+            # print("WRITE FILE")
+            writer = csv.writer(writeFile)
+            writer.writerows(lines)
+
+        self.edit_popup.dismiss()
+        self.history_popup.dismiss()
+        obj = None
+        self.view_history_button(obj)
+        self.edit_row()
+
     # view history by date:
     def view_history_button(self, instance):
         self.reset_user_entry()
+        layout = GridLayout(rows=3, spacing="1dp")
 
-        scroll = ScrollView(size_hint=(1, None), size=(700, 570))
         # retrieves item information from food list. adds each item as its own text widget
         history_list = []
-        for item in self._food_list:
-            history_list.append((item.get_date(),item.get_name(),item.get_calories(),"$%s"%item.get_cost(), item.get_carbs(), item.get_protein(), item.get_fat(), item.get_sugar(), item.get_sodium()))
+        for num, item in enumerate(reversed(self._food_list)):
+            history_list.append((num+1, item.get_date(),item.get_name(),item.get_calories(),"$%s"%item.get_cost(), item.get_carbs(), item.get_protein(), item.get_fat(), item.get_sugar(), item.get_sodium()))
 
-        table = MDDataTable(column_data=[
-            ("Date", dp(20)),
-            ("Food", dp(25)),
-            ("Calories", dp(20)),
-            ("Cost", dp(15)),
-            ("Carbs",dp(20)),
-            ("Protein",dp(20)),
-            ("Fat", dp(20)),
-            ("Sugar", dp(20)),
-            ("Sodium", dp(20))
-        ],
-        row_data = history_list
-        )
-        scroll.add_widget(table)
-        # makes the widgets scrollable
-        popup = Popup(title='User History (ESC to close)',
-                      content=scroll,
-                      size_hint=(None, None), size=(950, 700))
-        popup.open()
+        # this framework is limited and has bugs
+        # datatables is weird: in order to click the check all without there being a bug, the number of rows must be displayed on the screen
+        #TODO: change the rows_num=2 to a diff number (figure out how to format? for diff screens:
+        self.data_tables = MDDataTable(size_hint=(1, 1),
+                                       use_pagination=True,
+                                       rows_num=5,
+                                       column_data=[
+                                            ("No.", dp(10)),
+                                            ("Date", dp(20)),
+                                            ("Food", dp(25)),
+                                            ("Calories", dp(20)),
+                                            ("Cost", dp(15)),
+                                            ("Carbs",dp(20)),
+                                            ("Protein",dp(20)),
+                                            ("Fat", dp(20)),
+                                            ("Sugar", dp(20)),
+                                            ("Sodium", dp(20))
+                                        ],
+                                        row_data = history_list,
+                                        )
+
+        #add buttons to edit history
+        layout.add_widget(self.data_tables)
+        edit_button = MDRaisedButton(
+                    text="EDIT ENTRIES", on_release=self.on_button_press, size_hint=(1,None),size=(650,90),md_bg_color=(193/255,154/255,221/255,1)
+                )
+        close_button = MDRaisedButton(text="Close", md_bg_color=(193/255,154/255,221/255,1),size_hint=(1,None),size=(650,90))
+        layout.add_widget(edit_button)
+        layout.add_widget(close_button)
+        self.history_popup = Popup(title='History (Drag and Move to Scroll)',
+                                   content=layout,
+                                   title_color=(0, 0, 0, 1),
+                                   size_hint=(None, None), size=(650, 500),
+                                   background = ''
+                                   )
+        close_button.bind(on_press=self.history_popup.dismiss)
+        self.history_popup.open()
+
 
     def change_theme_button(self, instance):
         self.reset_user_entry()
