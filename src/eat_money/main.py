@@ -7,7 +7,7 @@ from kivymd.uix.toolbar import MDToolbar, MDBottomAppBar
 
 from eat_money.food import Food
 from eat_money.CalorieNinja import find_food_data
-from text_helper import input_helper, date_helper, food_helper, cost_helper, list_helper
+from eat_money.text_helper import input_helper, date_helper, food_helper, cost_helper, list_helper
 
 #TODO: will need to add kivymd in project requirements/packaging
 from kivymd.app import MDApp
@@ -190,11 +190,11 @@ class MyApp(MDApp):
 
 
         # button widget for recommended caloric intake
-        self.rec_button = Button(
+        self.rec_button = MDRaisedButton(
             text="CALORIE RECOMMENDATIONS",
             size_hint=(1, 0.5),
-            bold=True,
-            background_color='#C19ADD',
+            md_bg_color=(67 / 255, 53 / 255, 76 / 255, 1),
+            _no_ripple_effect=True
         )
         self.rec_button.bind(on_release=self.view_rec_button)
         self.window.add_widget(self.rec_button)
@@ -230,7 +230,7 @@ class MyApp(MDApp):
     # side-note: kivy closes the main window when ESC is pressed normally
     def dismiss_popup_key_press(self, key, scancode, codepoint, modifiers, idk):
         if isinstance(App.get_running_app().root_window.children[0], Popup):
-            if scancode == 27
+            if scancode == 27:
                 App.get_running_app().root_window.children[0].dismiss()
 
 
@@ -730,7 +730,7 @@ class MyApp(MDApp):
             # self._selection_list = instance_selection_list.get_selected_list_items()
 
     def edit_row(self) -> None:
-        print("success edit row")
+        #print("success edit row")
 
         layout = GridLayout(rows=3,spacing="1dp")
         button_layout = GridLayout(rows=2,spacing="1dp",size_hint=(1,None),size=(650,90))
@@ -788,7 +788,7 @@ class MyApp(MDApp):
         del self._food_list[num]
 
     def remove_row(self) -> None:
-        print("success remove row")
+        #print("success remove row")
         if self._item_selected:
             size = len(self._food_list)
             num = size - self._selected_index
@@ -799,7 +799,7 @@ class MyApp(MDApp):
             self._item_selected = False
 
     def change_row(self) -> None:
-        print("CHANGE ROW SUCCESS")
+        #print("CHANGE ROW SUCCESS")
 
         if self._item_selected:
             size = len(self._food_list)
@@ -883,7 +883,7 @@ class MyApp(MDApp):
             self.date.text=item.get_date()
         else:
             if self.food.text == item.get_name():
-                print("SAME ITEM")
+                #("SAME ITEM")
                 food = Food(self.date.text, item.get_name(), self.cost.text, item.get_calories(),
                               item.get_carbs(), item.get_protein(), item.get_fat(), item.get_sugar(),
                               item.get_sodium())
@@ -901,7 +901,8 @@ class MyApp(MDApp):
         #TODO: get rid of pressing space to exit pop-up
 
         if not move_foward:
-            print('nothing')
+            pass
+            #print('nothing')
             # self.change_status.text = 'Please enter valid information!'
 
         else:
