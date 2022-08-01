@@ -37,6 +37,7 @@ from kivy.config import Config
 from kivy.uix.popup import Popup
 from kivy.core.window import Window
 from kivy.uix.scrollview import ScrollView
+from kivy.clock import Clock
 from kivy.app import runTouchApp
 
 
@@ -74,9 +75,14 @@ class MyApp(MDApp):
         self._curr_cost = ""
 
         # units of time available
-        # in the future, want the ability to "remember" preferences
         self._units = ["Daily", "Weekly", "Monthly", "Annual"]
         self._curr_unit = self._units[0]
+
+        # default assignment for BMR values
+        self._age = 25
+        self._heightcm = 180
+        self._weightkg = 75
+        self._sex = "m"
 
         # reads in old data from csv upon build start
         # stores Food objects in food_list
@@ -110,33 +116,24 @@ class MyApp(MDApp):
         # also, color scheme/theme can be changed... preferences?
         self.header = Label(
             text="eat money",
-            font_size=85,
+            font_name="Comic",
+            font_size=95,
             color='#8CA262',
             halign='center'
         )
         self.window.add_widget(self.header)
 
         self.date = Label(
-            text=self._today.strftime("%B %d, %Y"),
+            text=self._today.strftime("\n%B %d, %Y"),
             font_size=20,
             color='#8CA262',
             halign='center'
         )
         self.window.add_widget(self.date)
 
-        #add daily calories label
-        self.cal_disp = Label(
-            text="Daily Calories: ".ljust(30) + "%s" % str(self._daily_cals),
-            font_size=25,
-            size_hint=(1, 0.5),
-            color='#8CA262',
-            halign='left'
-        )
-        self.window.add_widget(self.cal_disp)
-
-        #add daily spent label
+        # add daily spent label
         self.spent_disp = Label(
-            text="Daily Spent: ".ljust(30) + "$%s" % str(self._daily_spent),
+            text="Daily Spending: ".ljust(30) + "$" + "{0:00.2f}".format(round(self._daily_spent, 2)),
             font_size=25,
             size_hint=(1, 0.5),
             color='#8CA262',
@@ -144,8 +141,21 @@ class MyApp(MDApp):
         )
         self.window.add_widget(self.spent_disp)
 
+        #add daily calories label
+        self.cal_disp = Label(
+            text="Daily Calories: ".ljust(30) + str(round(self._daily_cals,1)) + " cals",
+            font_size=25,
+            size_hint=(1, 0.5),
+            color='#8CA262',
+            halign='left'
+        )
+        self.window.add_widget(self.cal_disp)
+
         # text input widget for user input
-        self.input_field = Builder.load_string(input_helper)
+        self.input_field = Builder.load_string("""MDTextField:
+            hint_text: "Enter info"
+            multiline: False""")
+        self.input_field.focus = True
         self.window.add_widget(self.input_field)
 
         # button widget to submit text entry
@@ -178,6 +188,17 @@ class MyApp(MDApp):
         self.history_button.bind(on_release=self.view_history_button)
         self.window.add_widget(self.history_button)
 
+
+        # button widget for recommended caloric intake
+        self.rec_button = Button(
+            text="CALORIE RECOMMENDATIONS",
+            size_hint=(1, 0.5),
+            bold=True,
+            background_color='#C19ADD',
+        )
+        self.rec_button.bind(on_release=self.view_rec_button)
+        self.window.add_widget(self.rec_button)
+
         self.theme_button = MDRaisedButton(
             text="CHANGE THEME",
             size_hint=(1, 0.5),
@@ -191,13 +212,16 @@ class MyApp(MDApp):
         # ex. if user input is invalid/successful
         self.infobox = Label(
             text="welcome to eat money!",
-            font_size=25,
+            font_name="Comic",
+            font_size=35,
             color='#8CA262',
             halign='center'
         )
         self.window.add_widget(self.infobox)
 
         self.remember_preference()
+
+        self.input_field.bind(on_text_validate=lambda x: self.big_button_press("idk"))
 
         return self.window
 
@@ -206,7 +230,7 @@ class MyApp(MDApp):
     # side-note: kivy closes the main window when ESC is pressed normally
     def dismiss_popup_key_press(self, key, scancode, codepoint, modifiers, idk):
         if isinstance(App.get_running_app().root_window.children[0], Popup):
-            if scancode == 13 or scancode == 27:
+            if scancode == 27
                 App.get_running_app().root_window.children[0].dismiss()
 
 
@@ -215,17 +239,29 @@ class MyApp(MDApp):
             prefs_dict = json.load(r_prefs)
 
         # currently hardcoded for num of preferences (2)
-        if len(prefs_dict) == 2:
+        if len(prefs_dict) == 6:
             if prefs_dict["theme"] == "dark":
                 self.change_theme_button("new")
             if prefs_dict["unit"] in self._units:
                 self._curr_unit = prefs_dict["unit"]
+            if self.check_valid_cost(prefs_dict["age"], False):
+                self._age = prefs_dict["age"]
+            if self.check_valid_cost(prefs_dict["height"], False):
+                self._heightcm = prefs_dict["height"]
+            if self.check_valid_cost(prefs_dict["weight"], False):
+                self._weightkg = prefs_dict["weight"]
+            if prefs_dict["sex"] == "f":
+                self._sex = "f"
 
     def save_preferences(self):
         if self._light_theme:
-            prefs_dict = {"theme": "light", "unit": self._curr_unit.lower()}
+            prefs_dict = {"theme": "light", "unit": self._curr_unit.lower(),
+                          "age": self._age, "height": self._heightcm,
+                          "weight": self._weightkg, "sex": self._sex}
         else:
-            prefs_dict = {"theme": "dark", "unit": self._curr_unit.lower()}
+            prefs_dict = {"theme": "dark", "unit": self._curr_unit.lower(),
+                          "age": self._age, "height": self._heightcm,
+                          "weight": self._weightkg, "sex": self._sex}
         with open('preferences.json', 'w') as w_prefs:
             json.dump(prefs_dict, w_prefs, indent=4)
 
@@ -279,8 +315,12 @@ class MyApp(MDApp):
                 self._daily_cals += float(food.get_calories())
 
     def update_daily_disp(self):
-        self.cal_disp.text = "Daily Calories: ".ljust(30) + "%s" % str(self._daily_cals)
-        self.spent_disp.text = "Daily Spent:".ljust(30) + "$ %s" % str(self._daily_spent)
+        self.cal_disp.text = "Daily Calories: ".ljust(30) + str(round(self._daily_cals,1)) + " cals"
+        self.spent_disp.text = "Daily Spending: ".ljust(30) + "$" + "{0:00.2f}".format(round(self._daily_spent, 2))
+
+    def md_helper(self, idk):
+        self.input_field.focus = True
+
     # this function corresponds to the behavior when we click
     # the topmost button (its name will change upon selection,
     # so I've decided to call it "big button")
@@ -305,27 +345,24 @@ class MyApp(MDApp):
                 # add Food object
                 food_list = find_food_data(self._curr_name, self._today.strftime("%Y-%m-%d"), self._curr_cost)
                 menu_text = ""
-                #check if list is empty
+                # check if list is empty
                 if len(food_list) == 0:
-                    menu_text += "unable to locate " + self._curr_name + " in database!"
+                    self.infobox.text = "unable to locate " + self._curr_name + " in database!"
                 else:
                     for item in food_list:
-                        data_entry = [self._today.strftime("%Y-%m-%d"), item.get_name(), self._curr_cost, item.get_calories(), item.get_carbs(), item.get_protein(), item.get_fat(), item.get_sugar(), item.get_sodium()]
+                        item.cost = round(float(self._curr_cost) / len(food_list), 2)
+                        data_entry = [self._today.strftime("%Y-%m-%d"), item.get_name(), item.get_cost(),
+                                      item.get_calories(), item.get_carbs(), item.get_protein(), item.get_fat(),
+                                      item.get_sugar(), item.get_sodium()]
+
                         self.add_new_data(data_entry)
                         self._food_list.append(item)
                         self._daily_cals += float(item.get_calories())
                         self._daily_spent += float(item.get_cost())
-                        menu_text += item.get_name() + " ($" + self._curr_cost + ") added successfully!" + "\n"
-                self.infobox.text = menu_text
-                #self.infobox.text = self._curr_name + " ($" + self._curr_cost + ") added successfully!"
-                    # if calories != -1:
-                    #     curr_food = Food(self._today.strftime("%Y-%m-%d"), db_name, self._curr_cost, calories, carbs, protein, fat, sugar, sodium)
-                    #     data_entry = [self._today.strftime("%Y-%m-%d"), db_name, self._curr_cost, calories, carbs, protein, fat, sugar, sodium]
-                    #     self.infobox.text = self._curr_name + " ($" + self._curr_cost + ") added successfully!"
-                    #     self._food_list.append(curr_food)
-                    #     self.add_new_data(data_entry)
-                    # else:
-                    #     self.infobox.text = "unable to locate " + self._curr_name + " in database!"
+                        menu_text += (item.get_name() + ", ")
+                    menu_text = menu_text[0:len(menu_text) - 2]
+                    self.infobox.text = menu_text + " ($" + self._curr_cost + ") added successfully!"
+
         else:
             if self.input_field.text == "":
                 self.infobox.text = "please enter a valid name!"
@@ -336,6 +373,8 @@ class MyApp(MDApp):
                 self._first_click = True
         self.input_field.text = ""
         self.update_daily_disp()
+
+        Clock.schedule_once(self.md_helper)
 
     # since we don't yet officially have a "reset" button,
     # this function seeks to emulate that behavior; it will be
@@ -378,6 +417,19 @@ class MyApp(MDApp):
         for food in reversed(self._food_list):
             if self._curr_unit == self._units[1]:
                 if int(date(int(food.get_date()[0:4]), int(food.get_date()[5:7]), int(food.get_date()[8:10])).isocalendar().week) == int(date_comparison_value):
+                    total_cost += float(food.get_cost())
+                    total_calories += float(food.get_calories())
+                    total_carbs += float(food.get_carbs())
+                    total_protein += float(food.get_protein())
+                    total_fat += float(food.get_fat())
+                    total_sugar += float(food.get_sugar())
+                    total_sodium += float(food.get_sodium())
+                else:
+                    break
+            elif self._curr_unit == self._units[0] or self._curr_unit == self._units[2]:
+                if int(food.get_date()[str_selection_start:str_selection_end]) == int(date_comparison_value)\
+                        and int(food.get_date()[5:7])==int(self._today.month) and int(food.get_date()[0:4])==\
+                        int(self._today.year):
                     total_cost += float(food.get_cost())
                     total_calories += float(food.get_calories())
                     total_carbs += float(food.get_carbs())
@@ -483,11 +535,150 @@ class MyApp(MDApp):
         popup_layout.add_widget(popup_sugar)
         popup_layout.add_widget(popup_sodium)
 
-        self._stats_popup = Popup(title='User Statistics',
+        self._stats_popup = Popup(title='User Statistics (ESC to close)',
                                   content=popup_layout,
                                   size_hint=(None, None), size=(400, 550))
 
         self._stats_popup.open()
+
+    def view_rec_button(self, instance):
+        if instance == "new":
+            self._rec_popup.dismiss()
+        self.reset_user_entry()
+
+        bmr = self.bmr(self._age, self._heightcm, self._weightkg, self._sex)
+
+        popup_layout_new = GridLayout(cols=1)
+
+        popup_total_header = Label(
+            text="Resting Caloric Expenditure:",
+            underline=True,
+            font_size=24,
+            color='#FFFFFF',
+            halign='center'
+        )
+        popup_total = Label(
+            bold=True,
+            text="{:.1f}".format(bmr) + " cals",
+            font_size=40,
+            color='#FFFFFF',
+            halign='center'
+        )
+        popup_remaining_header = Label(
+            text="Calories Remaining:",
+            underline=True,
+            font_size=24,
+            color='#FFFFFF',
+            halign='center'
+        )
+        popup_remaining = Label(
+            bold=True,
+            text="{:.1f}".format(bmr - self._daily_cals) + " cals",
+            font_size=40,
+            color='#FFFFFF',
+            halign='center'
+        )
+        self.age_input_field = Builder.load_string("""MDTextField:
+            write_tab: False
+            current_hint_text_color: [1,1,1,0.6]
+            line_color_normal: [1,1,1,0.15]
+            hint_text: "Enter age"
+            multiline: False""")
+        self.ht_input_field = Builder.load_string("""MDTextField:
+            write_tab: False
+            current_hint_text_color: [1,1,1,0.6]
+            line_color_normal: [1,1,1,0.15]
+            hint_text: "Enter height (cm)"
+            multiline: False""")
+        self.wt_input_field = Builder.load_string("""MDTextField:
+            write_tab: False
+            current_hint_text_color: [1,1,1,0.6]
+            line_color_normal: [1,1,1,0.15]
+            hint_text: "Enter weight (kg)"
+            multiline: False""")
+        self.sex_input_field = Builder.load_string("""MDTextField:
+            write_tab: False
+            current_hint_text_color: [1,1,1,0.6]
+            line_color_normal: [1,1,1,0.15]
+            hint_text: "Enter sex (m/f)"
+            multiline: False""")
+
+        self.age_input_field.bind(on_text_validate=lambda x: self.rec_tb_transfer(0))
+        self.ht_input_field.bind(on_text_validate=lambda x: self.rec_tb_transfer(1))
+        self.wt_input_field.bind(on_text_validate=lambda x: self.rec_tb_transfer(2))
+        self.sex_input_field.bind(on_text_validate=lambda x: self.update_user_info("idk"))
+
+        self.popup_rec_status = Label(
+            text="View and update basal metabolic rate (BMR) data",
+            font_size=16,
+            color='#FFFFFF',
+            halign='center'
+        )
+
+        if instance == "new":
+            self.popup_rec_status.text = "Updated user information successfully!"
+
+        popup_update_button = Button(
+            text="UPDATE USER INFO",
+            size_hint=(1, 0.8),
+            bold=True,
+            background_color='#C19ADD',
+        )
+        popup_update_button.bind(on_release=self.update_user_info)
+
+        popup_layout_new.add_widget(popup_total_header)
+        popup_layout_new.add_widget(popup_total)
+        popup_layout_new.add_widget(popup_remaining_header)
+        popup_layout_new.add_widget(popup_remaining)
+        popup_layout_new.add_widget(self.age_input_field)
+        popup_layout_new.add_widget(self.ht_input_field)
+        popup_layout_new.add_widget(self.wt_input_field)
+        popup_layout_new.add_widget(self.sex_input_field)
+        popup_layout_new.add_widget(self.popup_rec_status)
+        popup_layout_new.add_widget(popup_update_button)
+
+
+        self._rec_popup = Popup(title='Caloric Expenditure (ESC to close)',
+                                  content=popup_layout_new,
+                                  size_hint=(None, None), size=(500, 550))
+
+        self._rec_popup.open()
+
+    def rec_tb_transfer(self, id):
+        if id == 0:
+            self.age_input_field.focus = False
+            self.ht_input_field.focus = True
+        if id == 1:
+            self.ht_input_field.focus = False
+            self.wt_input_field.focus = True
+        if id == 2:
+            self.wt_input_field.focus = False
+            self.sex_input_field.focus = True
+
+    def update_user_info(self, idk):
+        move_forward = True
+        if not self.check_valid_cost(self.age_input_field.text, False):
+            move_forward = False
+            self.age_input_field.text = ""
+        if not self.check_valid_cost(self.ht_input_field.text, False):
+            move_forward = False
+            self.ht_input_field.text = ""
+        if not self.check_valid_cost(self.wt_input_field.text, False):
+            move_forward = False
+            self.wt_input_field.text = ""
+        if self.sex_input_field.text.lower() != 'm' and self.sex_input_field.text.lower() != 'f':
+            move_forward = False
+            self.sex_input_field.text = ""
+
+        if not move_forward:
+            self.popup_rec_status.text = "Please enter valid user information!"
+        else:
+            self._age = float(self.age_input_field.text)
+            self._heightcm = float(self.ht_input_field.text)
+            self._weightkg = float(self.wt_input_field.text)
+            self._sex = self.sex_input_field.text.lower()
+            self.save_preferences()
+            self.view_rec_button("new")
 
     def rotate_units(self, instance):
         curr_pos = self._units.index(self._curr_unit)
@@ -816,18 +1007,31 @@ class MyApp(MDApp):
         close_button.bind(on_press=self.history_popup.dismiss)
         self.history_popup.open()
 
+
     def change_theme_button(self, instance):
         self.reset_user_entry()
+        self.md_helper("idk")
         if self._light_theme:
             Window.clearcolor = (0, 0, 0, 0)
             if instance != "new":
                 self.infobox.text = "applied dark theme!"
+            self.theme_cls.theme_style = "Dark"
             self._light_theme = False
         else:
             Window.clearcolor = (1, 1, 1, 1)
             self._light_theme = True
             self.infobox.text = "applied light theme!"
+            self.theme_cls.theme_style = "Light"
         self.save_preferences()
+
+    # calculates BMR (diff for m and f)
+    def bmr(self, age, ht, wt, sex):
+        if sex == "m":
+            return 88.362 + (13.397 * wt) + (4.799 * ht) - (5.677 * age)
+        elif sex == "f":
+            return 447.593 + (9.247 * wt) + (3.098 * ht) - (4.330 * age)
+        else:
+            return 0
 
 
 def main():

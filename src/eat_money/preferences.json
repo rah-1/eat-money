@@ -1,4 +1,8 @@
 {
-    "theme": "dark",
-    "unit": "daily"
+    "theme": "light",
+    "unit": "daily",
+    "age": 25,
+    "height": 180,
+    "weight": 75,
+    "sex": "m"
 }
