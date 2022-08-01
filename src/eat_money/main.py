@@ -206,7 +206,7 @@ class MyApp(MDApp):
     # side-note: kivy closes the main window when ESC is pressed normally
     def dismiss_popup_key_press(self, key, scancode, codepoint, modifiers, idk):
         if isinstance(App.get_running_app().root_window.children[0], Popup):
-            if scancode == 13 or scancode == 27 or scancode == 32:
+            if scancode == 13 or scancode == 27:
                 App.get_running_app().root_window.children[0].dismiss()
 
 
@@ -507,7 +507,7 @@ class MyApp(MDApp):
             {
                 "EDIT ENTRIES": self.edit_row,
                 "DELETE ENTRY": self.remove_row,
-                "CHANGE ENTRY": self.change_row,
+                "MODIFY ENTRY": self.change_row,
             }[instance_button.text]()
         except KeyError:
             pass
@@ -572,7 +572,7 @@ class MyApp(MDApp):
         # makes the widgets scrollable
         scroll.add_widget(history_layout)
         layout.add_widget(scroll)
-        for button_text in ["DELETE ENTRY", "CHANGE ENTRY"]:
+        for button_text in ["DELETE ENTRY", "MODIFY ENTRY"]:
             button_layout.add_widget(
                 MDRaisedButton(
                     text=button_text, on_release=self.on_button_press,size_hint=(1,1),
@@ -583,7 +583,7 @@ class MyApp(MDApp):
         layout.add_widget(button_layout)
         layout.add_widget(close_button)
 
-        self.edit_popup = Popup(title='Edit Entries (Hold Row to Select)',
+        self.edit_popup = Popup(title='Edit Entries (Hold Row to Select, Drag and Move to Scroll)',
                                 title_color=( 0, 0, 0, 1),
                                 content=layout,
                                 background='',
@@ -649,7 +649,7 @@ class MyApp(MDApp):
                 halign='center'
             )
             layout.add_widget(self.change_status)
-            self.change_popup = Popup(title='Change Entry',
+            self.change_popup = Popup(title='Modify Entry',
                                       background='',
                                       title_color=(0, 0, 0, 1),
                                       content=layout,
@@ -690,9 +690,6 @@ class MyApp(MDApp):
         elif not self.check_date(self.date.text):
             move_foward = False
             self.date.text=item.get_date()
-        elif not self.food.text.isalpha():
-            move_foward = False
-            self.food.text = item.get_name()
         else:
             if self.food.text == item.get_name():
                 print("SAME ITEM")
@@ -788,7 +785,7 @@ class MyApp(MDApp):
                                        use_pagination=True,
                                        rows_num=5,
                                        column_data=[
-                                            ("No.", dp(20)),
+                                            ("No.", dp(10)),
                                             ("Date", dp(20)),
                                             ("Food", dp(25)),
                                             ("Calories", dp(20)),
@@ -810,7 +807,7 @@ class MyApp(MDApp):
         close_button = MDRaisedButton(text="Close", md_bg_color=(193/255,154/255,221/255,1),size_hint=(1,None),size=(650,90))
         layout.add_widget(edit_button)
         layout.add_widget(close_button)
-        self.history_popup = Popup(title='History',
+        self.history_popup = Popup(title='History (Drag and Move to Scroll)',
                                    content=layout,
                                    title_color=(0, 0, 0, 1),
                                    size_hint=(None, None), size=(650, 500),
