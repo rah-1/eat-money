@@ -397,6 +397,8 @@ class MyApp(MDApp):
                     total_fat += float(food.get_fat())
                     total_sugar += float(food.get_sugar())
                     total_sodium += float(food.get_sodium())
+                else:
+                    break
             else:
                 if int(food.get_date()[str_selection_start:str_selection_end]) == int(date_comparison_value):
                     total_cost += float(food.get_cost())
