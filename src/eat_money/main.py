@@ -524,7 +524,7 @@ class MyApp(MDApp):
         popup_layout_new = GridLayout(cols=1)
 
         popup_total_header = Label(
-            text="Recommended Daily Intake (BMR):",
+            text="Resting Caloric Expenditure:",
             underline=True,
             font_size=24,
             color='#FFFFFF',
@@ -611,7 +611,7 @@ class MyApp(MDApp):
         popup_layout_new.add_widget(popup_update_button)
 
 
-        self._rec_popup = Popup(title='Recommended Caloric Intake (ESC to close)',
+        self._rec_popup = Popup(title='Caloric Expenditure (ESC to close)',
                                   content=popup_layout_new,
                                   size_hint=(None, None), size=(500, 550))
 
