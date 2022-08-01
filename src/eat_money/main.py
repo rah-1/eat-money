@@ -42,7 +42,7 @@ from kivy.app import runTouchApp
 
 
 import json
-import csv
+import sqlite3
 
 Config.set('graphics', 'resizable', True)
 Config.set('input', 'mouse', 'mouse,multitouch_on_demand')
@@ -89,6 +89,9 @@ class MyApp(MDApp):
         self._daily_spent = 0.00
         self._daily_cals = 0
         self._food_list = []
+        self._sqlite_connection = sqlite3.connect("data.db")
+        self._sqlite_cursor = self._sqlite_connection.cursor()
+        self._sqlite_commands = []
         self.read_old_data()
         self.calc_old_data_daily()
 
@@ -266,34 +269,49 @@ class MyApp(MDApp):
             json.dump(prefs_dict, w_prefs, indent=4)
 
     # this is a function to read in the csv file to load old data
-    # it turns the csv rows into Food objects and stores them in food_list
+    # it turns the sql rows into Food objects and stores them in food_list
     def read_old_data(self):
-        with open("data.csv") as csv_file:
-            csv_reader = csv.reader(csv_file, delimiter=',')
-            line_count = 0
-            for row in csv_reader:
-                if line_count != 0:
-                    date = row[0]
-                    name = row[1]
-                    cost = row[2]
-                    calories = row[3]
-                    carbs = row[4]
-                    protein = row[5]
-                    fat = row[6]
-                    sugar = row[7]
-                    sodium = row[8]
-
-                    food_item = Food(date, name, cost, calories, carbs, protein, fat, sugar, sodium)
-                    self._food_list.append(food_item)
-
-                line_count += 1
+        self._sqlite_cursor.execute("""
+                CREATE TABLE IF NOT EXISTS user_nutrition_data (
+                    date text,
+                    name text,
+                    cost real,
+                    calories real,
+                    carbs real,
+                    protein real,
+                    fat real,
+                    sugar real,
+                    sodium real
+                    );""")
+        self._sqlite_cursor.execute("SELECT * from user_nutrition_data")
+        results = self._sqlite_cursor.fetchall()
+        if len(results) > 0:
+            for row in results:
+                date = row[0]
+                name = row[1]
+                cost = row[2]
+                calories = row[3]
+                carbs = row[4]
+                protein = row[5]
+                fat = row[6]
+                sugar = row[7]
+                sodium = row[8]
+                food_item = Food(date, name, cost, calories, carbs, protein, fat, sugar, sodium)
+                self._food_list.append(food_item)
 
     # this function is for when we want to write new data
     # it is invoked when we submit food/cost info
     def add_new_data(self, data):
-        with open('data.csv', 'a', newline='') as f:
-            writer = csv.writer(f)
-            writer.writerow(data)
+        sql_command_string = "INSERT INTO user_nutrition_data VALUES ("
+        for i in range(len(data)):
+            if (type(data[i]) is str):
+                sql_command_string += "'" + data[i] + "'"
+            else:
+                sql_command_string += str(data[i])
+            if i != len(data) - 1:
+                sql_command_string += ", "
+        sql_command_string += ")"
+        self._sqlite_commands.append(sql_command_string)
 
     # input validation for cost field entry
     # checks whether a valid float was entered
@@ -783,9 +801,12 @@ class MyApp(MDApp):
         self.edit_popup.open()
 
     def remove_item(self, num):
+        #storing data that identifies a particular food entry for deletion in the sql database
+        identifying_data = [self._food_list[num].get_date(), self._food_list[num].get_name(), self._food_list[num].get_cost()]
+        del self._food_list[num]
         self.calc_old_data_daily()
         self.update_daily_disp()
-        del self._food_list[num]
+        return identifying_data
 
     def remove_row(self) -> None:
         #print("success remove row")
@@ -793,8 +814,9 @@ class MyApp(MDApp):
             size = len(self._food_list)
             num = size - self._selected_index
 
-            self.remove_item(num)
-            self.update_csv(num)
+            #passes identifying attributes into queue_update_db so that the correct tuple can be deleted
+            identifying_data = self.remove_item(num)
+            self.queue_delete_from_db(identifying_data)
 
             self._item_selected = False
 
@@ -813,7 +835,7 @@ class MyApp(MDApp):
 
             self.date.text = item.get_date()
             self.food.text = item.get_name()
-            self.cost.text = item.get_cost()
+            self.cost.text = str(item.get_cost())
 
             close_button = MDRectangleFlatButton(text="Close",
                                                  theme_text_color="Custom",
@@ -872,7 +894,7 @@ class MyApp(MDApp):
         elif self.food.text == "":
             self.food.text = item.get_name()
             move_foward=False
-        elif self.cost.text == item.get_cost().strip() and self.date.text == item.get_date().strip() and self.food.text == item.get_name().strip():
+        elif self.cost.text == str(item.get_cost()).strip() and self.date.text == item.get_date().strip() and self.food.text == item.get_name().strip():
             self.change_status.text = "No New Information Entered!"
             move_foward = False
         elif not self.check_valid_cost(self.cost.text,False):
@@ -906,7 +928,7 @@ class MyApp(MDApp):
             # self.change_status.text = 'Please enter valid information!'
 
         else:
-            self.remove_item(num)
+            identifying_data = self.remove_item(num)
             food = food_list[0]
             self._food_list.append(food)
             self._food_list.sort(key=lambda x: x.get_date())
@@ -915,7 +937,11 @@ class MyApp(MDApp):
             self.change_status.text = "Entry successfully changed!"
             # add data to data entry(csv)
             # add data to food_list
-            self.update_csv(num)
+            self.queue_delete_from_db(identifying_data)
+            data_entry = [food.get_date(), food.get_name(), food.get_cost(),
+                          food.get_calories(), food.get_carbs(), food.get_protein(), food.get_fat(),
+                          food.get_sugar(), food.get_sodium()]
+            self.add_new_data(data_entry)
             # sort list
             #update item entry
             self.change_popup.dismiss()
@@ -940,19 +966,11 @@ class MyApp(MDApp):
                     return False
         return True
 
-    def update_csv(self, num):
+    def queue_delete_from_db(self, identifying_data):
         lines = []
-        count = 0
-        lines.append(['Date','Name','Cost','Calories','Carbs','Protein','Total Fats','Sugar','Sodium'])
-        for item in self._food_list:
-            data_entry = [item.get_date(), item.get_name(), item.get_cost(), item.get_calories(),
-                          item.get_carbs(), item.get_protein(), item.get_fat(), item.get_sugar(), item.get_sodium()]
-            lines.append(data_entry)
-
-        with open('data.csv', 'w', newline='') as writeFile:
-            # print("WRITE FILE")
-            writer = csv.writer(writeFile)
-            writer.writerows(lines)
+        
+        sql_command_string = "DELETE FROM user_nutrition_data WHERE date='" + identifying_data[0] + "' AND name='" + identifying_data[1] + "' AND cost='" + str(identifying_data[2]) + "'"
+        self._sqlite_commands.append(sql_command_string)
 
         self.edit_popup.dismiss()
         self.history_popup.dismiss()
@@ -1033,6 +1051,12 @@ class MyApp(MDApp):
             return 447.593 + (9.247 * wt) + (3.098 * ht) - (4.330 * age)
         else:
             return 0
+
+    def stop(self, *args):
+        for statement in self._sqlite_commands:
+            self._sqlite_cursor.execute(statement)
+        self._sqlite_connection.commit()
+        self._sqlite_connection.close()
 
 
 def main():
