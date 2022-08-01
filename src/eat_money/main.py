@@ -538,8 +538,8 @@ class MyApp(MDApp):
     def edit_row(self) -> None:
         print("success edit row")
 
-        layout = GridLayout(rows=3, spacing="1dp")
-        button_layout = GridLayout(cols=2, spacing="1dp")
+        layout = GridLayout(rows=3,spacing="1dp")
+        button_layout = GridLayout(rows=2,spacing="1dp",size=(650,90))
         scroll = ScrollView(size_hint=(1,None), size=(650,320))
         history_layout = Builder.load_string(list_helper)
 
