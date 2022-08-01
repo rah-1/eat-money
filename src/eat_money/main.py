@@ -63,13 +63,15 @@ class MyApp(MDApp):
 
         # reads in old data from csv upon build start
         # stores Food objects in food_list
+        # initializes sqlite database
+        # initializes list to store sqlite commands to be run at program exit
         self._daily_spent = 0.00
         self._daily_cals = 0
         self._food_list = []
-        pythonTime = timeit(
-            lambda: self.read_old_data(), number=1
-        )
-        print(pythonTime)
+        self._sqlite_connection = sqlite3.connect("data.db")
+        self._sqlite_cursor = self._sqlite_connection.cursor()
+        self._sqlite_commands = []
+        self.read_old_data()
         self.calc_old_data_daily()
 
         # boolean variable to switch between food and cost entry
@@ -244,9 +246,7 @@ class MyApp(MDApp):
     # this is a function to read in the csv file to load old data
     # it turns the csv rows into Food objects and stores them in food_list
     def read_old_data(self):
-        sqlite_connection = sqlite3.connect("data.db")
-        sqlite_cursor = sqlite_connection.cursor()
-        sqlite_cursor.execute("""
+        self._sqlite_cursor.execute("""
                 CREATE TABLE IF NOT EXISTS user_nutrition_data (
                     date text,
                     name text,
@@ -258,8 +258,8 @@ class MyApp(MDApp):
                     sugar real,
                     sodium real
                     );""")
-        sqlite_cursor.execute("SELECT * from user_nutrition_data")
-        results = sqlite_cursor.fetchall()
+        self._sqlite_cursor.execute("SELECT * from user_nutrition_data")
+        results = self._sqlite_cursor.fetchall()
         if len(results) > 0:
             for row in results:
                 date = row[0]
@@ -273,7 +273,7 @@ class MyApp(MDApp):
                 sodium = row[8]
                 food_item = Food(date, name, cost, calories, carbs, protein, fat, sugar, sodium)
                 self._food_list.append(food_item)
-        sqlite_connection.close()
+        #self._sqlite_connection.close()
 
         # with open("data.csv") as csv_file:
         #     csv_reader = csv.reader(csv_file, delimiter=',')
@@ -298,8 +298,6 @@ class MyApp(MDApp):
     # this function is for when we want to write new data
     # it is invoked when we submit food/cost info
     def add_new_data(self, data):
-        sqlite_connection = sqlite3.connect("data.db")
-        sqlite_cursor = sqlite_connection.cursor()
         sql_command_string = "INSERT INTO user_nutrition_data VALUES ("
         for i in range(len(data)):
             if (type(data[i]) is str):
@@ -309,9 +307,8 @@ class MyApp(MDApp):
             if i != len(data) - 1:
                 sql_command_string += ", "
         sql_command_string += ")"
-        sqlite_cursor.execute(sql_command_string)
-        sqlite_connection.commit()
-        sqlite_connection.close()
+        self._sqlite_commands.append(sql_command_string)
+
 
         # with open('data.csv', 'a', newline='') as f:
         #     writer = csv.writer(f)
@@ -373,8 +370,10 @@ class MyApp(MDApp):
                         data_entry = [self._today.strftime("%Y-%m-%d"), item.get_name(), item.get_cost(),
                                       item.get_calories(), item.get_carbs(), item.get_protein(), item.get_fat(),
                                       item.get_sugar(), item.get_sodium()]
-
-                        self.add_new_data(data_entry)
+                        pythonTime = timeit(
+                            lambda: self.add_new_data(data_entry), number=1
+                        )
+                        print(pythonTime)
                         self._food_list.append(item)
                         self._daily_cals += float(item.get_calories())
                         self._daily_spent += float(item.get_cost())
@@ -750,6 +749,13 @@ class MyApp(MDApp):
             return 447.593 + (9.247 * wt) + (3.098 * ht) - (4.330 * age)
         else:
             return 0
+
+    # defines end-of-execution behavior; specifically, updating the .db file
+    def stop(self, *args):
+        for statement in self._sqlite_commands:
+            self._sqlite_cursor.execute(statement)
+        self._sqlite_connection.commit()
+        self._sqlite_connection.close()
 
 
 def main():
