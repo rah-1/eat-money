@@ -65,8 +65,8 @@ class MyApp(MDApp):
         # window color
         Window.clearcolor = (1, 1, 1, 1)
         win_x, win_y = Window.size
-        Window.minimum_width = int(win_x * .5)
-        Window.minimum_height = int(win_y * .5)
+        Window.minimum_width = win_x
+        Window.minimum_height = win_y
 
         # these store the current name/cost based on user entry
         self._curr_name = ""
@@ -539,8 +539,8 @@ class MyApp(MDApp):
         print("success edit row")
 
         layout = GridLayout(rows=3, spacing="1dp")
-        button_layout = GridLayout(cols=2,spacing="1dp")
-        scroll = ScrollView(size_hint=(1,None))
+        button_layout = GridLayout(cols=2, spacing="1dp")
+        scroll = ScrollView(size_hint=(1,None), size=(650,320))
         history_layout = Builder.load_string(list_helper)
 
         index = 1
@@ -572,7 +572,7 @@ class MyApp(MDApp):
         for button_text in ["DELETE ENTRY", "CHANGE ENTRY"]:
             button_layout.add_widget(
                 MDRaisedButton(
-                    text=button_text, on_release=self.on_button_press, size_hint=(1,None),size=(325,50),
+                    text=button_text, on_release=self.on_button_press,size_hint=(1,1),
                     md_bg_color=(193 / 255, 154 / 255, 221 / 255, 1)
                 )
             )
