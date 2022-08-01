@@ -399,6 +399,17 @@ class MyApp(MDApp):
                     total_sodium += float(food.get_sodium())
                 else:
                     break
+            elif self._curr_unit == self._units[0] or self._curr_unit == self._units[2]:
+                if int(food.get_date()[str_selection_start:str_selection_end]) == int(date_comparison_value)\
+                        and int(food.get_date()[5:7])==int(self._today.month) and int(food.get_date()[0:4])==\
+                        int(self._today.year):
+                    total_cost += float(food.get_cost())
+                    total_calories += float(food.get_calories())
+                    total_carbs += float(food.get_carbs())
+                    total_protein += float(food.get_protein())
+                    total_fat += float(food.get_fat())
+                    total_sugar += float(food.get_sugar())
+                    total_sodium += float(food.get_sodium())
             else:
                 if int(food.get_date()[str_selection_start:str_selection_end]) == int(date_comparison_value):
                     total_cost += float(food.get_cost())
