@@ -36,8 +36,9 @@ MDSelectionList:
     icon_bg_color: app.theme_color
     on_selected: app.on_selected(*args)
     on_unselected: app.on_unselected(*args)
-    size_hint: 1, 1
-    
+    progress_round_color: app.theme_color
+    progress_round_size: "35dp"
+    size_hint: 1.0 , None 
 """
 
 change_dialog = """

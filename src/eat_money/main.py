@@ -64,6 +64,10 @@ class MyApp(MDApp):
 
         # window color
         Window.clearcolor = (1, 1, 1, 1)
+        win_x, win_y = Window.size
+        Window.minimum_width = int(win_x * .5)
+        Window.minimum_height = int(win_y * .5)
+
         # these store the current name/cost based on user entry
         self._curr_name = ""
         self._curr_cost = ""
@@ -535,8 +539,8 @@ class MyApp(MDApp):
         print("success edit row")
 
         layout = GridLayout(rows=3, spacing="1dp")
-        button_layout = GridLayout(cols=2,spacing="1dp",size_hint=(1,.105),size=(750,90))
-        scroll = ScrollView()
+        button_layout = GridLayout(cols=2,spacing="1dp")
+        scroll = ScrollView(size_hint=(1,None))
         history_layout = Builder.load_string(list_helper)
 
         index = 1
@@ -572,7 +576,7 @@ class MyApp(MDApp):
                     md_bg_color=(193 / 255, 154 / 255, 221 / 255, 1)
                 )
             )
-        close_button = MDRaisedButton(text="Close", md_bg_color=(193 / 255, 154 / 255, 221 / 255, 1), size_hint=(1,None),size=(750,90))
+        close_button = MDRaisedButton(text="Close", md_bg_color=(193 / 255, 154 / 255, 221 / 255, 1), size_hint=(1,None),size=(650,90))
         layout.add_widget(button_layout)
         layout.add_widget(close_button)
 
@@ -643,7 +647,7 @@ class MyApp(MDApp):
                 halign='center'
             )
             layout.add_widget(self.change_status)
-            self.change_popup = Popup(title='Add Entry',
+            self.change_popup = Popup(title='Change Entry',
                                       background='',
                                       title_color=(0, 0, 0, 1),
                                       content=layout,
@@ -800,9 +804,9 @@ class MyApp(MDApp):
         #add buttons to edit history
         layout.add_widget(self.data_tables)
         edit_button = MDRaisedButton(
-                    text="EDIT ENTRIES", on_release=self.on_button_press, size_hint=(1,None),size=(750,90),md_bg_color=(193/255,154/255,221/255,1)
+                    text="EDIT ENTRIES", on_release=self.on_button_press, size_hint=(1,None),size=(650,90),md_bg_color=(193/255,154/255,221/255,1)
                 )
-        close_button = MDRaisedButton(text="Close", md_bg_color=(193/255,154/255,221/255,1),size_hint=(1,None),size=(750,90))
+        close_button = MDRaisedButton(text="Close", md_bg_color=(193/255,154/255,221/255,1),size_hint=(1,None),size=(650,90))
         layout.add_widget(edit_button)
         layout.add_widget(close_button)
         self.history_popup = Popup(title='History',
