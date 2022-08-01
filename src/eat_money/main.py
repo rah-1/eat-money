@@ -691,7 +691,7 @@ class MyApp(MDApp):
         self.view_stats_button("new")
 
     def on_button_press(self, instance_button: MDRaisedButton) -> None:
-        print("success button press")
+        #print("success button press")
         '''Called when a control button is clicked.'''
 
         try:
@@ -743,7 +743,7 @@ class MyApp(MDApp):
             for item in reversed( self._food_list):
                 icon = IconLeftWidget(icon="checkbox-blank-circle")
                 food_header = TwoLineAvatarListItem(
-                    text=item.get_name() + " ($" + item.get_cost() + ")",
+                    text=item.get_name() + " ($" + str(item.get_cost()) + ")",
                     text_color=( 1, 1, 1, 0),
                     on_press=lambda x, smth = index: self.item_press(smth),
                     secondary_text=item.get_date(),
