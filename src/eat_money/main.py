@@ -44,6 +44,7 @@ import json
 import csv
 
 Config.set('graphics', 'resizable', True)
+Config.set('input', 'mouse', 'mouse,multitouch_on_demand')
 
 class MyApp(MDApp):
     theme_color = get_color_from_hex('#8CA262')
