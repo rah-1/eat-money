@@ -270,8 +270,10 @@ class MyApp(MDApp):
             return False
 
     def calc_old_data_daily(self):
+        self._daily_spent = 0
+        self._daily_cals = 0
         for food in reversed(self._food_list):
-            if int(food.get_date()[8:10]) == int(date.today().day):
+            if int(food.get_date()[8:10]) == int(date.today().day) and int(food.get_date()[5:7]) == int(date.today().month) and int(food.get_date()[0:4]) == int(date.today().year):
                 self._daily_spent += float(food.get_cost())
                 self._daily_cals += float(food.get_calories())
 
@@ -539,8 +541,8 @@ class MyApp(MDApp):
         print("success edit row")
 
         layout = GridLayout(rows=3,spacing="1dp")
-        button_layout = GridLayout(rows=2,spacing="1dp",size=(650,90))
-        scroll = ScrollView(size_hint=(1,None), size=(650,320))
+        button_layout = GridLayout(rows=2,spacing="1dp",size_hint=(1,None),size=(650,90))
+        scroll = ScrollView(size_hint=(1,None), size=(650,310))
         history_layout = Builder.load_string(list_helper)
 
         index = 1
@@ -589,8 +591,7 @@ class MyApp(MDApp):
         self.edit_popup.open()
 
     def remove_item(self, num):
-        self._daily_spent -= float(self._food_list[num].get_cost())
-        self._daily_cals -= float(self._food_list[num].get_calories())
+        self.calc_old_data_daily()
         self.update_daily_disp()
         del self._food_list[num]
 
@@ -719,8 +720,7 @@ class MyApp(MDApp):
             food = food_list[0]
             self._food_list.append(food)
             self._food_list.sort(key=lambda x: x.get_date())
-            self._daily_cals += float(item.get_calories())
-            self._daily_spent += float(item.get_cost())
+            self.calc_old_data_daily()
             self.update_daily_disp()
             self.change_status.text = "Entry successfully changed!"
             # add data to data entry(csv)
