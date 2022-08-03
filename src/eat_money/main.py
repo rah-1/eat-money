@@ -514,11 +514,10 @@ class MyApp(MDApp):
         cost_output, calories_output, carbs_output, protein_output, fat_output, sugar_output, sodium_output = self.calc_stats()
 
         popup_layout = GridLayout(cols=1)
-        popup_unit_button = Button(
+        popup_unit_button = MDRaisedButton(
             text="CHANGE UNIT",
             size_hint=(1, 0.8),
-            bold=True,
-            background_color='#C19ADD',
+            md_bg_color=(193 / 255, 154 / 255, 221 / 255, 1)
         )
         popup_unit_button.bind(on_release=self.rotate_units)
         popup_spending_header = Label(
@@ -579,6 +578,11 @@ class MyApp(MDApp):
             color='#FFFFFF',
             halign='center'
         )
+        popup_close_button = MDRaisedButton(
+            text="CLOSE",
+            size_hint=(1, 0.8),
+            md_bg_color=(193 / 255, 154 / 255, 221 / 255, 1)
+        )
 
         popup_layout.add_widget(popup_unit_button)
         popup_layout.add_widget(popup_spending_header)
@@ -590,10 +594,13 @@ class MyApp(MDApp):
         popup_layout.add_widget(popup_fat)
         popup_layout.add_widget(popup_sugar)
         popup_layout.add_widget(popup_sodium)
+        popup_layout.add_widget(popup_close_button)
 
         self._stats_popup = Popup(title='User Statistics (ESC to close)',
                                   content=popup_layout,
                                   size_hint=(None, None), size=(400, 550))
+
+        popup_close_button.bind(on_release=self._stats_popup.dismiss)
 
         self._stats_popup.open()
 
@@ -680,7 +687,7 @@ class MyApp(MDApp):
             md_bg_color=(193 / 255, 154 / 255, 221 / 255, 1)
         )
         popup_close_button = MDRaisedButton(
-            text="Close",
+            text="CLOSE",
             size_hint=(1, 0.8),
             md_bg_color=(193 / 255, 154 / 255, 221 / 255, 1)
         )
@@ -848,7 +855,7 @@ class MyApp(MDApp):
                     md_bg_color=(193 / 255, 154 / 255, 221 / 255, 1)
                 )
             )
-        close_button = MDRaisedButton(text="Close", md_bg_color=(193 / 255, 154 / 255, 221 / 255, 1), size_hint=(1,None),size=(650,90))
+        close_button = MDRaisedButton(text="CLOSE", md_bg_color=(193 / 255, 154 / 255, 221 / 255, 1), size_hint=(1,None),size=(650,90))
         # layout.add_widget(button_layout)
         layout.add_widget(close_button)
 
@@ -905,7 +912,7 @@ class MyApp(MDApp):
             self.food.text = item.get_name()
             self.cost.text = "{0:00.2f}".format(float(item.get_cost()))
 
-            close_button = MDRectangleFlatButton(text="Close",
+            close_button = MDRectangleFlatButton(text="CLOSE",
                                                  theme_text_color="Custom",
                                                  text_color=(193 / 255, 154 / 255, 221 / 255, 1),
                                                  line_color=(193 / 255, 154 / 255, 221 / 255, 1))
@@ -1107,7 +1114,7 @@ class MyApp(MDApp):
             text="EDIT ENTRIES", on_release=self.on_button_press, size_hint=(1, None), size=(650, 90),
             md_bg_color=(193 / 255, 154 / 255, 221 / 255, 1)
         )
-        close_button = MDRaisedButton(text="Close", md_bg_color=(193 / 255, 154 / 255, 221 / 255, 1),
+        close_button = MDRaisedButton(text="CLOSE", md_bg_color=(193 / 255, 154 / 255, 221 / 255, 1),
                                       size_hint=(1, None), size=(650, 90))
         layout.add_widget(edit_button)
         layout.add_widget(close_button)
