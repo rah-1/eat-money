@@ -1,8 +1,8 @@
 {
     "theme": "light",
     "unit": "daily",
-    "age": 25,
-    "height": 180,
-    "weight": 75,
-    "sex": "m"
+    "age": 15.0,
+    "height": 5.0,
+    "weight": 5.0,
+    "sex": "f"
 }
