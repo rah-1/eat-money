@@ -121,12 +121,13 @@ class MyApp(MDApp):
             text="eat money",
             font_size=95,
             color='#8CA262',
-            halign='center'
+            halign='center',
+            font_name='comic'
         )
         self.window.add_widget(self.header)
 
         self.date = Label(
-            text=self._today.strftime("\n%B %d, %Y\n"),
+            text=self._today.strftime("\n%B %d, %Y"),
             font_size=20,
             color='#8CA262',
             halign='center'
@@ -145,7 +146,7 @@ class MyApp(MDApp):
 
         #add daily calories label
         self.cal_disp = Label(
-            text= str(round(self._daily_cals,1)) + " cals consumed today",
+            text=str(round(self._daily_cals,1)) + " cals consumed today",
             font_size=25,
             size_hint=(1, 0.5),
             color='#8CA262',
@@ -193,7 +194,7 @@ class MyApp(MDApp):
 
         # button widget for recommended caloric intake
         self.rec_button = MDRaisedButton(
-            text="RESTING CALORIC EXPENDITURES",
+            text="CALORIC EXPENDITURE",
             size_hint=(1, 0.5),
             md_bg_color=(67 / 255, 53 / 255, 76 / 255, 1),
             _no_ripple_effect=True
@@ -216,7 +217,8 @@ class MyApp(MDApp):
             text="welcome to eat money!",
             font_size=35,
             color='#8CA262',
-            halign='center'
+            halign='center',
+            font_name='comic'
         )
         self.window.add_widget(self.infobox)
 
@@ -333,8 +335,8 @@ class MyApp(MDApp):
                 self._daily_cals += float(food.get_calories())
 
     def update_daily_disp(self):
-        self.cal_disp.text = "Daily Calories: ".ljust(30) + str(round(self._daily_cals,1)) + " cals"
-        self.spent_disp.text = "Daily Spending: ".ljust(30) + "$" + "{0:00.2f}".format(round(self._daily_spent, 2))
+        self.spent_disp.text = "$" + "{0:00.2f}".format(round(self._daily_spent, 2)) + " spent today"
+        self.cal_disp.text = str(round(self._daily_cals,1)) + " cals consumed today"
 
     def md_helper(self, idk):
         self.input_field.focus = True
