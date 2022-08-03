@@ -783,7 +783,7 @@ class MyApp(MDApp):
                     theme_text_color='Custom',
                     secondary_theme_text_color = 'Custom',
                     secondary_text_color = c,
-                    text=item.get_name() + " ($" + str(item.get_cost()) + ")",
+                    text=item.get_name() + " (${0:00.2f}".format(float(item.get_cost())) + ")",
                     on_press=lambda x, smth = index: self.item_press(smth),
                     secondary_text=item.get_date(),
                     _no_ripple_effect=True,
@@ -969,7 +969,7 @@ class MyApp(MDApp):
             # add data to data entry(csv)
             # add data to food_list
             self.queue_delete_from_db(identifying_data)
-            data_entry = [food.get_date(), food.get_name(), food.get_cost(),
+            data_entry = [food.get_date(), food.get_name(), "{0:00.2f}".format(float(food.get_cost())),
                           food.get_calories(), food.get_carbs(), food.get_protein(), food.get_fat(),
                           food.get_sugar(), food.get_sodium()]
             self.add_new_data(data_entry)
@@ -1017,8 +1017,9 @@ class MyApp(MDApp):
         history_list = []
         for num, item in enumerate(reversed(self._food_list)):
             history_list.append((
-                                num + 1, item.get_date(), item.get_name(), item.get_calories(), "$%s" % item.get_cost(),
-                                item.get_carbs(), item.get_protein(), item.get_fat(), item.get_sugar(),
+                                num + 1, item.get_date(), item.get_name(), item.get_calories(),
+                                "${0:00.2f}".format(float(item.get_cost())), item.get_carbs(),
+                                item.get_protein(), item.get_fat(), item.get_sugar(),
                                 item.get_sodium()))
 
         # this framework is limited and has bugs
@@ -1032,12 +1033,12 @@ class MyApp(MDApp):
                                            ("Date", dp(20)),
                                            ("Food", dp(25)),
                                            ("Calories", dp(20)),
-                                           ("Cost", dp(15)),
-                                           ("Carbs", dp(20)),
-                                           ("Protein", dp(20)),
-                                           ("Fat", dp(20)),
-                                           ("Sugar", dp(20)),
-                                           ("Sodium", dp(20))
+                                           ("Cost", dp(20)),
+                                           ("Carbs (g)", dp(20)),
+                                           ("Protein (g)", dp(20)),
+                                           ("Fat (g)", dp(20)),
+                                           ("Sugar (g)", dp(20)),
+                                           ("Sodium (g)", dp(20))
                                        ],
                                        row_data=history_list,
                                        )
