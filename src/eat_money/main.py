@@ -158,7 +158,6 @@ class MyApp(MDApp):
         self.input_field = Builder.load_string("""MDTextField:
             hint_text: "Enter info"
             multiline: False""")
-        self.input_field.focus = True
         self.window.add_widget(self.input_field)
 
         # button widget to submit text entry
