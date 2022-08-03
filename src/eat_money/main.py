@@ -121,12 +121,13 @@ class MyApp(MDApp):
             text="eat money",
             font_size=95,
             color='#8CA262',
-            halign='center'
+            halign='center',
+            font_name='comic'
         )
         self.window.add_widget(self.header)
 
         self.date = Label(
-            text=self._today.strftime("\n%B %d, %Y\n"),
+            text=self._today.strftime("\n%B %d, %Y"),
             font_size=20,
             color='#8CA262',
             halign='center'
@@ -216,7 +217,8 @@ class MyApp(MDApp):
             text="welcome to eat money!",
             font_size=35,
             color='#8CA262',
-            halign='center'
+            halign='center',
+            font_name='comic'
         )
         self.window.add_widget(self.infobox)
 
