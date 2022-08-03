@@ -919,10 +919,10 @@ class MyApp(MDApp):
         if self.date.text == "":
             self.date.text = item.get_date()
             move_foward = False
-        elif self.cost.text == "":
-            self.cost.text = item.get_cost()
+        if self.cost.text == "":
+            self.cost.text = str(item.get_cost())
             move_foward = False
-        elif self.food.text == "":
+        if self.food.text == "":
             self.food.text = item.get_name()
             move_foward=False
         elif self.cost.text == str(item.get_cost()).strip() and self.date.text == item.get_date().strip() and self.food.text == item.get_name().strip():
@@ -984,6 +984,10 @@ class MyApp(MDApp):
         #check if entry statements are valid
 
     def check_date(self, date):
+        month = date[5:7]
+        day = date[8:10]
+        # check date is not past this year
+
         for count, element in enumerate(date):
             if len(date) != 10:
                 return False
@@ -997,6 +1001,22 @@ class MyApp(MDApp):
                 if element != "-":
                     # print(count + " ERROR" + element)
                     return False
+
+        if int(date[0:4]) > int(self._today.year):
+            return False
+            # checks that date is not the 0 month
+        if month == '00':
+            return False
+            # checks that month does not go past 12
+        if int(month) > 12:
+            return False
+            # checks that it is no the 0th day
+        if day == '00':
+            return False
+            # checks that day does not go past 31
+        if int(day) > 31:
+            return False
+
         return True
 
     def queue_delete_from_db(self, identifying_data):
