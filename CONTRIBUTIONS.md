@@ -1,8 +1,8 @@
 Contributions
 Zoe - View history, logo/design, API implementation
 Rahul - Backend, database setup, add cost, stats
-Natalie - README File
-Immanuel - Packaging, distribution
+Natalie - README File, data validation
+Immanuel - Packaging, database setup, distribution
 
 
 # Eat Money
