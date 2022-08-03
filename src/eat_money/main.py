@@ -380,6 +380,8 @@ class MyApp(MDApp):
                         menu_text += (item.get_name() + ", ")
                     menu_text = menu_text[0:len(menu_text) - 2]
                     self.infobox.text = menu_text + " ($" + self._curr_cost + ") added successfully!"
+                    self.create_datatable()
+                    self.update_daily_disp()
 
         else:
             if self.input_field.text == "":
@@ -390,8 +392,6 @@ class MyApp(MDApp):
                 self.infobox.text = "please enter the cost of " + self._curr_name
                 self._first_click = True
         self.input_field.text = ""
-        self.update_daily_disp()
-        self.create_datatable()
         Clock.schedule_once(self.md_helper)
 
     # since we don't yet officially have a "reset" button,
