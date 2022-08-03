@@ -715,13 +715,13 @@ class MyApp(MDApp):
 
     def update_user_info(self, idk):
         move_forward = True
-        if not self.check_valid_cost(self.age_input_field.text, False):
+        if not (self.check_valid_cost(self.age_input_field.text, False) and float(self.age_input_field.text) > 0):
             move_forward = False
             self.age_input_field.text = ""
-        if not self.check_valid_cost(self.ht_input_field.text, False):
+        if not (self.check_valid_cost(self.ht_input_field.text, False) and float(self.ht_input_field.text) > 0):
             move_forward = False
             self.ht_input_field.text = ""
-        if not self.check_valid_cost(self.wt_input_field.text, False):
+        if not (self.check_valid_cost(self.wt_input_field.text, False) and float(self.wt_input_field.text) > 0):
             move_forward = False
             self.wt_input_field.text = ""
         if self.sex_input_field.text.lower() != 'm' and self.sex_input_field.text.lower() != 'f':
@@ -859,7 +859,7 @@ class MyApp(MDApp):
     def close_edit_button(self, instance):
         # self.history_popup.dismiss()
         # self.view_history_button(None)
-        print(self._entry_edited)
+        #print(self._entry_edited)
         if self._entry_edited:
             self.edit_popup.dismiss()
             self.history_popup.dismiss()
@@ -923,7 +923,7 @@ class MyApp(MDApp):
                                                  theme_text_color="Custom",
                                                  text_color=(193 / 255, 154 / 255, 221 / 255, 1),
                                                  line_color=(193 / 255, 154 / 255, 221 / 255, 1))
-            submit_button = MDFlatButton(text="Save",
+            submit_button = MDFlatButton(text="SAVE",
                                          theme_text_color="Custom",
                                          text_color=(193 / 255, 154 / 255, 221 / 255, 1),
                                          line_color=(193 / 255, 154 / 255, 221 / 255, 1),

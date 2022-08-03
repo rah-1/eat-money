@@ -4,10 +4,11 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "eat_money"
-version = "0.3.5"
+version = "0.9.7"
 description = "Calorie/Spending tracker"
 dependencies = ["requests",
                 "Kivy",
+                "KivyMD"
 ]
 readme = "README.md"
 license = {file = "LICENSE.txt"}
