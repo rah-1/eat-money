@@ -256,6 +256,8 @@ class MyApp(MDApp):
 
         self.create_datatable()
 
+        self._entry_edited = False
+
         self.input_field.focus = False
 
         return self._screen_manager
@@ -392,7 +394,7 @@ class MyApp(MDApp):
                 self._curr_cost = self.input_field.text
                 self._first_click = False
 
-
+                self._loading_screen_message.text = "Retrieving nutrition info..."
                 self._screen_manager.current = "loading"
 
                 def validInputs(obj):
@@ -795,7 +797,6 @@ class MyApp(MDApp):
 
     def edit_row(self) -> None:
         #print("success edit row")
-
         layout = GridLayout(rows=4,spacing="1dp")
         # button_layout = GridLayout(rows=2,spacing="1dp",size_hint=(1,None),size=(650,90))
         scroll = ScrollView(size_hint=(1,1), size=(650,230))
@@ -864,9 +865,27 @@ class MyApp(MDApp):
     def close_edit_button(self, instance):
         # self.history_popup.dismiss()
         # self.view_history_button(None)
-        self.create_datatable()
-        self.history_popup.open()
-        self.edit_popup.dismiss()
+        print(self._entry_edited)
+        if self._entry_edited:
+            self.edit_popup.dismiss()
+            self.history_popup.dismiss()
+
+            self._loading_screen_message.text = "Updating data table..."
+            self._screen_manager.current = "loading"
+
+            def cleanup(obj):
+                #self.edit_popup.dismiss()
+                #self.history_popup.close()
+                self.create_datatable()
+                self._screen_manager.current = "main"
+                self.history_popup.open()
+
+            Clock.schedule_once(cleanup, 2)
+        else:
+            self.edit_popup.dismiss()
+            self.history_popup.open()
+
+        self._entry_edited = False
 
     def remove_item(self, num):
         #storing data that identifies a particular food entry for deletion in the sql database
@@ -878,6 +897,7 @@ class MyApp(MDApp):
 
     def remove_row(self) -> None:
         #print("success remove row")
+        self._entry_edited = True
         if self._item_selected:
             size = len(self._food_list)
             num = size - self._selected_index
@@ -1004,6 +1024,7 @@ class MyApp(MDApp):
             self.calc_old_data_daily()
             self.update_daily_disp()
             self.change_status.text = "Entry successfully changed!"
+            self._entry_edited = True
             # add data to data entry(csv)
             # add data to food_list
             self.queue_delete_from_db(identifying_data)
@@ -1018,7 +1039,6 @@ class MyApp(MDApp):
             # self.create_datatable()
             self._item_selected = False
 
-        self._screen_manager.current = "main"
         #check if entry statements are valid
 
     def check_date(self, date):
