@@ -119,7 +119,6 @@ class MyApp(MDApp):
         # also, color scheme/theme can be changed... preferences?
         self.header = Label(
             text="eat money",
-            font_name="Comic",
             font_size=95,
             color='#8CA262',
             halign='center'
@@ -194,7 +193,7 @@ class MyApp(MDApp):
 
         # button widget for recommended caloric intake
         self.rec_button = MDRaisedButton(
-            text="CALORIE RECOMMENDATIONS",
+            text="RESTING CALORIC EXPENDITURES",
             size_hint=(1, 0.5),
             md_bg_color=(67 / 255, 53 / 255, 76 / 255, 1),
             _no_ripple_effect=True
@@ -215,7 +214,6 @@ class MyApp(MDApp):
         # ex. if user input is invalid/successful
         self.infobox = Label(
             text="welcome to eat money!",
-            font_name="Comic",
             font_size=35,
             color='#8CA262',
             halign='center'
@@ -225,6 +223,8 @@ class MyApp(MDApp):
         self.remember_preference()
 
         self.input_field.bind(on_text_validate=lambda x: self.big_button_press("idk"))
+
+        self.create_datatable()
 
         return self.window
 
@@ -283,7 +283,7 @@ class MyApp(MDApp):
                     sugar real,
                     sodium real
                     );""")
-        self._sqlite_cursor.execute("SELECT * from user_nutrition_data")
+        self._sqlite_cursor.execute("SELECT * FROM user_nutrition_data ORDER BY date")
         results = self._sqlite_cursor.fetchall()
         if len(results) > 0:
             for row in results:
@@ -391,7 +391,7 @@ class MyApp(MDApp):
                 self._first_click = True
         self.input_field.text = ""
         self.update_daily_disp()
-
+        self.create_datatable()
         Clock.schedule_once(self.md_helper)
 
     # since we don't yet officially have a "reset" button,
@@ -566,7 +566,7 @@ class MyApp(MDApp):
 
         bmr = self.bmr(self._age, self._heightcm, self._weightkg, self._sex)
 
-        popup_layout_new = GridLayout(cols=1)
+        popup_layout_new = GridLayout(cols=1, spacing = '1dp')
 
         popup_total_header = Label(
             text="Resting Caloric Expenditure:",
@@ -636,11 +636,15 @@ class MyApp(MDApp):
         if instance == "new":
             self.popup_rec_status.text = "Updated user information successfully!"
 
-        popup_update_button = Button(
+        popup_update_button = MDRaisedButton(
             text="UPDATE USER INFO",
             size_hint=(1, 0.8),
-            bold=True,
-            background_color='#C19ADD',
+            md_bg_color=(193 / 255, 154 / 255, 221 / 255, 1)
+        )
+        popup_close_button = MDRaisedButton(
+            text="Close",
+            size_hint=(1, 0.8),
+            md_bg_color=(193 / 255, 154 / 255, 221 / 255, 1)
         )
         popup_update_button.bind(on_release=self.update_user_info)
 
@@ -654,11 +658,13 @@ class MyApp(MDApp):
         popup_layout_new.add_widget(self.sex_input_field)
         popup_layout_new.add_widget(self.popup_rec_status)
         popup_layout_new.add_widget(popup_update_button)
+        popup_layout_new.add_widget(popup_close_button)
 
 
         self._rec_popup = Popup(title='Caloric Expenditure (ESC to close)',
                                   content=popup_layout_new,
                                   size_hint=(None, None), size=(500, 550))
+        popup_close_button.bind(on_release=self._rec_popup.dismiss)
 
         self._rec_popup.open()
 
@@ -733,6 +739,8 @@ class MyApp(MDApp):
         self.change_popup.dismiss()
 
     def on_selected(self, instance_selection_list, instance_selection_item):
+        if len(self._food_list) == 0:
+            instance_selection_item.do_unselected_item()
         if len(instance_selection_list.get_selected_list_items()) > 1:
             instance_selection_item.do_unselected_item()
         if len(instance_selection_list.get_selected_list_items()) == 1 and not self._item_selected:
@@ -750,31 +758,45 @@ class MyApp(MDApp):
     def edit_row(self) -> None:
         #print("success edit row")
 
-        layout = GridLayout(rows=3,spacing="1dp")
-        button_layout = GridLayout(rows=2,spacing="1dp",size_hint=(1,None),size=(650,90))
-        scroll = ScrollView(size_hint=(1,None), size=(650,310))
+        layout = GridLayout(rows=4,spacing="1dp")
+        # button_layout = GridLayout(rows=2,spacing="1dp",size_hint=(1,None),size=(650,90))
+        scroll = ScrollView(size_hint=(1,1), size=(650,230))
         history_layout = Builder.load_string(list_helper)
-
+        c = None
+        bg = None
         index = 1
         # retrieves item information from food list. adds each item as its own text widget
+        if self._light_theme:
+            c = (0, 0, 0, 1)
+            bg = "#FFFFFF"
+        else:
+            c = (1, 1, 1, 1)
+            bg = '#212121'
         if (len(self._food_list) > 0):
             for item in reversed( self._food_list):
-                icon = IconLeftWidget(icon="checkbox-blank-circle")
+                # icon = IconLeftWidget(icon="blank")
                 food_header = TwoLineAvatarListItem(
+                    theme_text_color='Custom',
+                    bg_color = bg,
+                    text_color = c,
+                    secondary_theme_text_color = 'Custom',
+                    secondary_text_color = c,
                     text=item.get_name() + " ($" + str(item.get_cost()) + ")",
-                    text_color=( 1, 1, 1, 0),
                     on_press=lambda x, smth = index: self.item_press(smth),
                     secondary_text=item.get_date(),
                     _no_ripple_effect=True,
                 )
-                food_header.add_widget(icon)
+                # food_header.add_widget(icon)
                 history_layout.add_widget(food_header)
                 index+=1
                 # print(food_header)
         else:
             no_entry = TwoLineAvatarListItem(
                 #TODO: need to test this functionality
-                text="No entries to date!"
+                text="No entries to date!",
+                theme_text_color='Custom',
+                text_color= c,
+                bg_color=bg
             )
             history_layout.add_widget(no_entry)
 
@@ -782,14 +804,14 @@ class MyApp(MDApp):
         scroll.add_widget(history_layout)
         layout.add_widget(scroll)
         for button_text in ["DELETE ENTRY", "MODIFY ENTRY"]:
-            button_layout.add_widget(
+            layout.add_widget(
                 MDRaisedButton(
-                    text=button_text, on_release=self.on_button_press,size_hint=(1,1),
+                    text=button_text, on_release=self.on_button_press,size_hint=(1,None),size=(650,90),
                     md_bg_color=(193 / 255, 154 / 255, 221 / 255, 1)
                 )
             )
         close_button = MDRaisedButton(text="Close", md_bg_color=(193 / 255, 154 / 255, 221 / 255, 1), size_hint=(1,None),size=(650,90))
-        layout.add_widget(button_layout)
+        # layout.add_widget(button_layout)
         layout.add_widget(close_button)
 
         self.edit_popup = Popup(title='Edit Entries (Hold Row to Select, Drag and Move to Scroll)',
@@ -797,8 +819,16 @@ class MyApp(MDApp):
                                 content=layout,
                                 background='',
                                 size_hint=(None, None), size=(650, 500))
-        close_button.bind(on_press=self.edit_popup.dismiss)
+        close_button.bind(on_press=self.close_edit_button)
         self.edit_popup.open()
+        self.history_popup.dismiss()
+
+    def close_edit_button(self, instance):
+        # self.history_popup.dismiss()
+        # self.view_history_button(None)
+        self.create_datatable()
+        self.history_popup.open()
+        self.edit_popup.dismiss()
 
     def remove_item(self, num):
         #storing data that identifies a particular food entry for deletion in the sql database
@@ -817,7 +847,7 @@ class MyApp(MDApp):
             #passes identifying attributes into queue_update_db so that the correct tuple can be deleted
             identifying_data = self.remove_item(num)
             self.queue_delete_from_db(identifying_data)
-
+            # self.create_datatable()
             self._item_selected = False
 
     def change_row(self) -> None:
@@ -945,6 +975,8 @@ class MyApp(MDApp):
             # sort list
             #update item entry
             self.change_popup.dismiss()
+            # self.history_popup.dismiss()
+            # self.create_datatable()
             self._item_selected = False
 
 
@@ -973,59 +1005,63 @@ class MyApp(MDApp):
         self._sqlite_commands.append(sql_command_string)
 
         self.edit_popup.dismiss()
-        self.history_popup.dismiss()
-        obj = None
-        self.view_history_button(obj)
         self.edit_row()
 
     # view history by date:
-    def view_history_button(self, instance):
-        self.reset_user_entry()
+
+    def create_datatable(self):
         layout = GridLayout(rows=3, spacing="1dp")
 
         # retrieves item information from food list. adds each item as its own text widget
         history_list = []
         for num, item in enumerate(reversed(self._food_list)):
-            history_list.append((num+1, item.get_date(),item.get_name(),item.get_calories(),"$%s"%item.get_cost(), item.get_carbs(), item.get_protein(), item.get_fat(), item.get_sugar(), item.get_sodium()))
+            history_list.append((
+                                num + 1, item.get_date(), item.get_name(), item.get_calories(), "$%s" % item.get_cost(),
+                                item.get_carbs(), item.get_protein(), item.get_fat(), item.get_sugar(),
+                                item.get_sodium()))
 
         # this framework is limited and has bugs
         # datatables is weird: in order to click the check all without there being a bug, the number of rows must be displayed on the screen
-        #TODO: change the rows_num=2 to a diff number (figure out how to format? for diff screens:
+        # TODO: change the rows_num=2 to a diff number (figure out how to format? for diff screens:
         self.data_tables = MDDataTable(size_hint=(1, 1),
                                        use_pagination=True,
                                        rows_num=5,
                                        column_data=[
-                                            ("No.", dp(10)),
-                                            ("Date", dp(20)),
-                                            ("Food", dp(25)),
-                                            ("Calories", dp(20)),
-                                            ("Cost", dp(15)),
-                                            ("Carbs",dp(20)),
-                                            ("Protein",dp(20)),
-                                            ("Fat", dp(20)),
-                                            ("Sugar", dp(20)),
-                                            ("Sodium", dp(20))
-                                        ],
-                                        row_data = history_list,
-                                        )
+                                           ("No.", dp(10)),
+                                           ("Date", dp(20)),
+                                           ("Food", dp(25)),
+                                           ("Calories", dp(20)),
+                                           ("Cost", dp(15)),
+                                           ("Carbs", dp(20)),
+                                           ("Protein", dp(20)),
+                                           ("Fat", dp(20)),
+                                           ("Sugar", dp(20)),
+                                           ("Sodium", dp(20))
+                                       ],
+                                       row_data=history_list,
+                                       )
 
-        #add buttons to edit history
+        # add buttons to edit history
         layout.add_widget(self.data_tables)
         edit_button = MDRaisedButton(
-                    text="EDIT ENTRIES", on_release=self.on_button_press, size_hint=(1,None),size=(650,90),md_bg_color=(193/255,154/255,221/255,1)
-                )
-        close_button = MDRaisedButton(text="Close", md_bg_color=(193/255,154/255,221/255,1),size_hint=(1,None),size=(650,90))
+            text="EDIT ENTRIES", on_release=self.on_button_press, size_hint=(1, None), size=(650, 90),
+            md_bg_color=(193 / 255, 154 / 255, 221 / 255, 1)
+        )
+        close_button = MDRaisedButton(text="Close", md_bg_color=(193 / 255, 154 / 255, 221 / 255, 1),
+                                      size_hint=(1, None), size=(650, 90))
         layout.add_widget(edit_button)
         layout.add_widget(close_button)
         self.history_popup = Popup(title='History (Drag and Move to Scroll)',
                                    content=layout,
                                    title_color=(0, 0, 0, 1),
                                    size_hint=(None, None), size=(650, 500),
-                                   background = ''
+                                   background=''
                                    )
         close_button.bind(on_press=self.history_popup.dismiss)
-        self.history_popup.open()
 
+    def view_history_button(self, instance):
+        self.reset_user_entry()
+        self.history_popup.open()
 
     def change_theme_button(self, instance):
         self.reset_user_entry()
@@ -1052,19 +1088,18 @@ class MyApp(MDApp):
         else:
             return 0
 
+
     def stop(self, *args):
         for statement in self._sqlite_commands:
             self._sqlite_cursor.execute(statement)
         self._sqlite_connection.commit()
         self._sqlite_connection.close()
 
-
 def main():
     abspath = os.path.abspath(__file__)
     dname = os.path.dirname(abspath)
     os.chdir(dname)
     MyApp().run()
-
 
 if __name__ == '__main__':
     main()
