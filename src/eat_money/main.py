@@ -126,7 +126,7 @@ class MyApp(MDApp):
         self.window.add_widget(self.header)
 
         self.date = Label(
-            text=self._today.strftime("\n%B %d, %Y"),
+            text=self._today.strftime("\n%B %d, %Y\n"),
             font_size=20,
             color='#8CA262',
             halign='center'
@@ -135,7 +135,7 @@ class MyApp(MDApp):
 
         # add daily spent label
         self.spent_disp = Label(
-            text="Daily Spending: ".ljust(30) + "$" + "{0:00.2f}".format(round(self._daily_spent, 2)),
+            text= "$" + "{0:00.2f}".format(round(self._daily_spent, 2)) + " spent today",
             font_size=25,
             size_hint=(1, 0.5),
             color='#8CA262',
@@ -145,7 +145,7 @@ class MyApp(MDApp):
 
         #add daily calories label
         self.cal_disp = Label(
-            text="Daily Calories: ".ljust(30) + str(round(self._daily_cals,1)) + " cals",
+            text= str(round(self._daily_cals,1)) + " cals consumed today",
             font_size=25,
             size_hint=(1, 0.5),
             color='#8CA262',
