@@ -4,6 +4,7 @@ import os
 from kivy.uix.anchorlayout import AnchorLayout
 from kivymd.uix.selection import MDSelectionList
 from kivymd.uix.toolbar import MDToolbar, MDBottomAppBar
+from kivy.uix.screenmanager import ScreenManager, Screen
 
 from eat_money.food import Food
 from eat_money.CalorieNinja import find_food_data
@@ -46,6 +47,15 @@ import sqlite3
 
 Config.set('graphics', 'resizable', True)
 Config.set('input', 'mouse', 'mouse,multitouch_on_demand')
+
+class MainWindow(Screen):
+    pass
+
+class LoadingScreen(Screen):
+    pass
+
+class WindowManager(ScreenManager):
+    pass
 
 class MyApp(MDApp):
     theme_color = get_color_from_hex('#8CA262')
@@ -103,10 +113,28 @@ class MyApp(MDApp):
         self._today = date.today()
         # print("Today's date:", self._today.strftime("%B %d, %Y"))
 
+        # creates multiple screens to enable seamless swapping between loading/main screen
+        self._screen_manager = ScreenManager()
+        main_screen = MainWindow(name="main")
+        loading_screen = LoadingScreen(name="loading")
+
+        loading_grid = GridLayout(spacing="1dp", cols=1, size_hint=(.75, .75), pos_hint={"center_x": 0.5, "center_y": 0.5})
+        loading_screen_logo = Image(source="eatmoneylogo.png")
+        self._loading_screen_message = Label(
+            text="Retrieving nutrition info...",
+            font_size=48,
+            color="#8CA262",
+            halign='center',
+            valign="center"
+        )
+        loading_grid.add_widget(loading_screen_logo)
+        loading_grid.add_widget(self._loading_screen_message)
+        loading_screen.add_widget(loading_grid)
         # layout convention: grid
         # this means that each of the widgets (labels, buttons, etc.)
         # will each fit somewhere in the "grid" (makes things easier to orient)
         self.window = GridLayout(spacing="1dp")
+        main_screen.add_widget(self.window)
         self.window.cols = 1
         self.window.size_hint = (0.5, 0.7)
         self.window.pos_hint = {"center_x": 0.5, "center_y": 0.5}
@@ -219,14 +247,15 @@ class MyApp(MDApp):
             halign='center'
         )
         self.window.add_widget(self.infobox)
-
+        self._screen_manager.add_widget(main_screen)
+        self._screen_manager.add_widget(loading_screen)
         self.remember_preference()
 
         self.input_field.bind(on_text_validate=lambda x: self.big_button_press("idk"))
 
         self.create_datatable()
 
-        return self.window
+        return self._screen_manager
 
     # this function dismisses any open popup windows
     # if the user presses ESC, SPACE, or ENTER
@@ -360,29 +389,35 @@ class MyApp(MDApp):
                 self._curr_cost = self.input_field.text
                 self._first_click = False
 
-                # add Food object
-                food_list = find_food_data(self._curr_name, self._today.strftime("%Y-%m-%d"), self._curr_cost)
-                menu_text = ""
-                # check if list is empty
-                if len(food_list) == 0:
-                    self.infobox.text = "unable to locate " + self._curr_name + " in database!"
-                else:
-                    for item in food_list:
-                        item.cost = round(float(self._curr_cost) / len(food_list), 2)
-                        data_entry = [self._today.strftime("%Y-%m-%d"), item.get_name(), item.get_cost(),
-                                      item.get_calories(), item.get_carbs(), item.get_protein(), item.get_fat(),
-                                      item.get_sugar(), item.get_sodium()]
 
-                        self.add_new_data(data_entry)
-                        self._food_list.append(item)
-                        self._daily_cals += float(item.get_calories())
-                        self._daily_spent += float(item.get_cost())
-                        menu_text += (item.get_name() + ", ")
-                    menu_text = menu_text[0:len(menu_text) - 2]
-                    self.infobox.text = menu_text + " ($" + self._curr_cost + ") added successfully!"
-                    self.update_daily_disp()
-                    self.create_datatable()
+                self._screen_manager.current = "loading"
 
+                def validInputs(obj):
+                    # add Food object
+                    food_list = find_food_data(self._curr_name, self._today.strftime("%Y-%m-%d"), self._curr_cost)
+                    menu_text = ""
+                    # check if list is empty
+                    if len(food_list) == 0:
+                        self.infobox.text = "unable to locate " + self._curr_name + " in database!"
+                    else:
+                        for item in food_list:
+                            item.cost = round(float(self._curr_cost) / len(food_list), 2)
+                            data_entry = [self._today.strftime("%Y-%m-%d"), item.get_name(), item.get_cost(),
+                                          item.get_calories(), item.get_carbs(), item.get_protein(), item.get_fat(),
+                                          item.get_sugar(), item.get_sodium()]
+
+                            self.add_new_data(data_entry)
+                            self._food_list.append(item)
+                            self._daily_cals += float(item.get_calories())
+                            self._daily_spent += float(item.get_cost())
+                            menu_text += (item.get_name() + ", ")
+                        menu_text = menu_text[0:len(menu_text) - 2]
+                        self.infobox.text = menu_text + " ($" + self._curr_cost + ") added successfully!"
+                        self.update_daily_disp()
+                        self.create_datatable()
+                        self._screen_manager.current = "main"
+
+                Clock.schedule_once(validInputs, 2)
         else:
             if self.input_field.text == "":
                 self.infobox.text = "please enter a valid name!"
@@ -979,7 +1014,7 @@ class MyApp(MDApp):
             # self.create_datatable()
             self._item_selected = False
 
-
+        self._screen_manager.current = "main"
         #check if entry statements are valid
 
     def check_date(self, date):
