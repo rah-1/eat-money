@@ -867,7 +867,7 @@ class MyApp(MDApp):
 
             self.date.text = item.get_date()
             self.food.text = item.get_name()
-            self.cost.text = str(item.get_cost())
+            self.cost.text = "{0:00.2f}".format(float(item.get_cost()))
 
             close_button = MDRectangleFlatButton(text="Close",
                                                  theme_text_color="Custom",
@@ -920,13 +920,13 @@ class MyApp(MDApp):
             self.date.text = item.get_date()
             move_foward = False
         elif self.cost.text == "":
-            self.cost.text = item.get_cost()
+            self.cost.text = "{0:00.2f}".format(float(item.get_cost()))
             move_foward = False
         elif self.food.text == "":
             self.food.text = item.get_name()
             move_foward=False
         elif self.cost.text == str(item.get_cost()).strip() and self.date.text == item.get_date().strip() and self.food.text == item.get_name().strip():
-            self.change_status.text = "No New Information Entered!"
+            self.change_status.text = "No new information entered!"
             move_foward = False
         elif not self.check_valid_cost(self.cost.text, False):
             move_foward = False
