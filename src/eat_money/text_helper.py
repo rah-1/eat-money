@@ -11,6 +11,7 @@ date_helper = """
 MDTextField:
     text_color: 1, 1, 1, 1
     hint_text: "Enter Date"
+    hint_text_color: 1,1,1,1
     helper_text: "YYYY-MM-DD"
 
     helper_text_mode: "persistent"

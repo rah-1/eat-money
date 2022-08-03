@@ -945,9 +945,11 @@ class MyApp(MDApp):
                 food_list = find_food_data(self.food.text, self.date.text, self.cost.text)
 
                 if len(food_list) == 0:
+                    self.food.text = item.get_name()
                     self.change_status.text = " Unable to locate " + self.food.text + " in database!"
                     move_foward = False
                 elif len(food_list) > 1:
+                    self.food.text = item.get_name()
                     self.change_status.text = " Too many food items listed!"
                     move_foward = False
 
@@ -955,8 +957,6 @@ class MyApp(MDApp):
 
         if not move_foward:
             pass
-            #print('nothing')
-            # self.change_status.text = 'Please enter valid information!'
 
         else:
             identifying_data = self.remove_item(num)
