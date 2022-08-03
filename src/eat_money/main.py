@@ -7,7 +7,7 @@ from kivymd.uix.toolbar import MDToolbar, MDBottomAppBar
 
 from eat_money.food import Food
 from eat_money.CalorieNinja import find_food_data
-from eat_money.text_helper import input_helper, date_helper, food_helper, cost_helper, list_helper
+from eat_money.text_helper import input_helper, list_helper, date_helper, food_helper, cost_helper
 
 #TODO: will need to add kivymd in project requirements/packaging
 from kivymd.app import MDApp
@@ -778,9 +778,9 @@ class MyApp(MDApp):
             for item in reversed( self._food_list):
                 # icon = IconLeftWidget(icon="blank")
                 food_header = TwoLineAvatarListItem(
-                    theme_text_color='Custom',
                     bg_color = bg,
                     text_color = c,
+                    theme_text_color='Custom',
                     secondary_theme_text_color = 'Custom',
                     secondary_text_color = c,
                     text=item.get_name() + " (${0:00.2f}".format(float(item.get_cost())) + ")",
@@ -890,13 +890,12 @@ class MyApp(MDApp):
             self.change_status = Label(
                 text="Change entry details",
                 font_size=16,
-                color='#000000',
+                color='#FFFFFF',
                 halign='center'
             )
             layout.add_widget(self.change_status)
             self.change_popup = Popup(title='Modify Entry',
-                                      background='',
-                                      title_color=(0, 0, 0, 1),
+                                      title_color=(1, 1, 1, 1),
                                       content=layout,
                                       size_hint=(None, None), size=(350, 300))
             close_button.bind(on_press=self.unselect_item)
@@ -929,9 +928,9 @@ class MyApp(MDApp):
         elif self.cost.text == str(item.get_cost()).strip() and self.date.text == item.get_date().strip() and self.food.text == item.get_name().strip():
             self.change_status.text = "No New Information Entered!"
             move_foward = False
-        elif not self.check_valid_cost(self.cost.text,False):
+        elif not self.check_valid_cost(self.cost.text, False):
             move_foward = False
-            self.cost.text=item.get_cost()
+            self.cost.text = str(item.get_cost())
         elif not self.check_date(self.date.text):
             move_foward = False
             self.date.text=item.get_date()
