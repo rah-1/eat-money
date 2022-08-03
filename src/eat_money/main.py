@@ -872,7 +872,7 @@ class MyApp(MDApp):
     def close_edit_button(self, instance):
         # self.history_popup.dismiss()
         # self.view_history_button(None)
-        print(self._entry_edited)
+        #print(self._entry_edited)
         if self._entry_edited:
             self.edit_popup.dismiss()
             self.history_popup.dismiss()
@@ -936,7 +936,7 @@ class MyApp(MDApp):
                                                  theme_text_color="Custom",
                                                  text_color=(193 / 255, 154 / 255, 221 / 255, 1),
                                                  line_color=(193 / 255, 154 / 255, 221 / 255, 1))
-            submit_button = MDFlatButton(text="Save",
+            submit_button = MDFlatButton(text="SAVE",
                                          theme_text_color="Custom",
                                          text_color=(193 / 255, 154 / 255, 221 / 255, 1),
                                          line_color=(193 / 255, 154 / 255, 221 / 255, 1),
