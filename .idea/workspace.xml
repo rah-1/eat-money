@@ -2,8 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="9a1e4f44-6cc9-4328-b10f-f07b240414e7" name="Changes" comment="bug fixes and datatable performance fixes">
-      <change beforePath="$PROJECT_DIR$/src/eat_money/data.db" beforeDir="false" afterPath="$PROJECT_DIR$/src/eat_money/data.db" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/eat_money/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/eat_money/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/eat_money/preferences.json" beforeDir="false" afterPath="$PROJECT_DIR$/src/eat_money/preferences.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/eat_money/text_helper.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/eat_money/text_helper.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -72,7 +72,7 @@
       <workItem from="1659410333990" duration="684000" />
       <workItem from="1659415187260" duration="78000" />
       <workItem from="1659415290236" duration="301000" />
-      <workItem from="1659415599721" duration="32043000" />
+      <workItem from="1659415599721" duration="32391000" />
     </task>
     <task id="LOCAL-00001" summary="bug fixes and datatable performance fixes">
       <created>1659523101016</created>
@@ -103,6 +103,6 @@
     <option name="LAST_COMMIT_MESSAGE" value="bug fixes and datatable performance fixes" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/eat_money$main.coverage" NAME="main Coverage Results" MODIFIED="1659526855985" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src/eat_money" />
+    <SUITE FILE_PATH="coverage/eat_money$main.coverage" NAME="main Coverage Results" MODIFIED="1659527391271" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src/eat_money" />
   </component>
 </project>
