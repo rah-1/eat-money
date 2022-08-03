@@ -418,7 +418,7 @@ class MyApp(MDApp):
                         self.infobox.text = menu_text + " (${0:00.2f}".format(float(self._curr_cost)) + ") added successfully!"
                         self.update_daily_disp()
                         self.create_datatable()
-                        self._screen_manager.current = "main"
+                    self._screen_manager.current = "main"
 
                 Clock.schedule_once(validInputs, 2)
         else:
