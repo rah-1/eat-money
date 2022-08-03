@@ -193,7 +193,7 @@ class MyApp(MDApp):
 
         # button widget for recommended caloric intake
         self.rec_button = MDRaisedButton(
-            text="RESTING CALORIC EXPENDITURES",
+            text="CALORIC EXPENDITURE",
             size_hint=(1, 0.5),
             md_bg_color=(67 / 255, 53 / 255, 76 / 255, 1),
             _no_ripple_effect=True
