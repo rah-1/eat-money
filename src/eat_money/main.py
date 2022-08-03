@@ -8,7 +8,7 @@ from kivy.uix.screenmanager import ScreenManager, Screen
 
 from eat_money.food import Food
 from eat_money.CalorieNinja import find_food_data
-from eat_money.text_helper import input_helper, date_helper, food_helper, cost_helper, list_helper
+from eat_money.text_helper import input_helper, list_helper, date_helper, food_helper, cost_helper
 
 #TODO: will need to add kivymd in project requirements/packaging
 from kivymd.app import MDApp
@@ -149,12 +149,13 @@ class MyApp(MDApp):
             text="eat money",
             font_size=95,
             color='#8CA262',
-            halign='center'
+            halign='center',
+            font_name='comic'
         )
         self.window.add_widget(self.header)
 
         self.date = Label(
-            text=self._today.strftime("\n%B %d, %Y\n"),
+            text=self._today.strftime("\n%B %d, %Y"),
             font_size=20,
             color='#8CA262',
             halign='center'
@@ -173,7 +174,7 @@ class MyApp(MDApp):
 
         #add daily calories label
         self.cal_disp = Label(
-            text= str(round(self._daily_cals,1)) + " cals consumed today",
+            text=str(round(self._daily_cals,1)) + " cals consumed today",
             font_size=25,
             size_hint=(1, 0.5),
             color='#8CA262',
@@ -185,7 +186,6 @@ class MyApp(MDApp):
         self.input_field = Builder.load_string("""MDTextField:
             hint_text: "Enter info"
             multiline: False""")
-        self.input_field.focus = True
         self.window.add_widget(self.input_field)
 
         # button widget to submit text entry
@@ -244,7 +244,8 @@ class MyApp(MDApp):
             text="welcome to eat money!",
             font_size=35,
             color='#8CA262',
-            halign='center'
+            halign='center',
+            font_name='comic'
         )
         self.window.add_widget(self.infobox)
         self._screen_manager.add_widget(main_screen)
@@ -362,8 +363,8 @@ class MyApp(MDApp):
                 self._daily_cals += float(food.get_calories())
 
     def update_daily_disp(self):
-        self.cal_disp.text = "Daily Calories: ".ljust(30) + str(round(self._daily_cals,1)) + " cals"
-        self.spent_disp.text = "Daily Spending: ".ljust(30) + "$" + "{0:00.2f}".format(round(self._daily_spent, 2))
+        self.spent_disp.text = "$" + "{0:00.2f}".format(round(self._daily_spent, 2)) + " spent today"
+        self.cal_disp.text = str(round(self._daily_cals,1)) + " cals consumed today"
 
     def md_helper(self, idk):
         self.input_field.focus = True
@@ -811,12 +812,12 @@ class MyApp(MDApp):
             for item in reversed( self._food_list):
                 # icon = IconLeftWidget(icon="blank")
                 food_header = TwoLineAvatarListItem(
-                    theme_text_color='Custom',
                     bg_color = bg,
                     text_color = c,
+                    theme_text_color='Custom',
                     secondary_theme_text_color = 'Custom',
                     secondary_text_color = c,
-                    text=item.get_name() + " ($" + str(item.get_cost()) + ")",
+                    text=item.get_name() + " (${0:00.2f}".format(float(item.get_cost())) + ")",
                     on_press=lambda x, smth = index: self.item_press(smth),
                     secondary_text=item.get_date(),
                     _no_ripple_effect=True,
@@ -900,7 +901,7 @@ class MyApp(MDApp):
 
             self.date.text = item.get_date()
             self.food.text = item.get_name()
-            self.cost.text = str(item.get_cost())
+            self.cost.text = "{0:00.2f}".format(float(item.get_cost()))
 
             close_button = MDRectangleFlatButton(text="Close",
                                                  theme_text_color="Custom",
@@ -923,13 +924,12 @@ class MyApp(MDApp):
             self.change_status = Label(
                 text="Change entry details",
                 font_size=16,
-                color='#000000',
+                color='#FFFFFF',
                 halign='center'
             )
             layout.add_widget(self.change_status)
             self.change_popup = Popup(title='Modify Entry',
-                                      background='',
-                                      title_color=(0, 0, 0, 1),
+                                      title_color=(1, 1, 1, 1),
                                       content=layout,
                                       size_hint=(None, None), size=(350, 300))
             close_button.bind(on_press=self.unselect_item)
@@ -953,21 +953,23 @@ class MyApp(MDApp):
         if self.date.text == "":
             self.date.text = item.get_date()
             move_foward = False
-        elif self.cost.text == "":
-            self.cost.text = item.get_cost()
-            move_foward = False
-        elif self.food.text == "":
+        if self.cost.text == "":
+            self.cost.text = str(item.get_cost())
+        # elif self.cost.text == "":
+        #     self.cost.text = "{0:00.2f}".format(float(item.get_cost()))
+        #     move_foward = False
+        if self.food.text == "":
             self.food.text = item.get_name()
             move_foward=False
-        elif self.cost.text == str(item.get_cost()).strip() and self.date.text == item.get_date().strip() and self.food.text == item.get_name().strip():
-            self.change_status.text = "No New Information Entered!"
+        if not self.check_valid_cost(self.cost.text, False):
             move_foward = False
-        elif not self.check_valid_cost(self.cost.text,False):
-            move_foward = False
-            self.cost.text=item.get_cost()
-        elif not self.check_date(self.date.text):
+            self.cost.text = str(item.get_cost())
+        if not self.check_date(self.date.text):
             move_foward = False
             self.date.text=item.get_date()
+        elif self.cost.text == str(item.get_cost()).strip() and self.date.text == item.get_date().strip() and self.food.text == item.get_name().strip():
+            self.change_status.text = "No new information entered!"
+            move_foward = False
         else:
             if self.food.text == item.get_name():
                 #("SAME ITEM")
@@ -980,8 +982,10 @@ class MyApp(MDApp):
 
                 if len(food_list) == 0:
                     self.change_status.text = " Unable to locate " + self.food.text + " in database!"
+                    self.food.text = item.get_name()
                     move_foward = False
                 elif len(food_list) > 1:
+                    self.food.text = item.get_name()
                     self.change_status.text = " Too many food items listed!"
                     move_foward = False
 
@@ -989,8 +993,6 @@ class MyApp(MDApp):
 
         if not move_foward:
             pass
-            #print('nothing')
-            # self.change_status.text = 'Please enter valid information!'
 
         else:
             identifying_data = self.remove_item(num)
@@ -1003,7 +1005,7 @@ class MyApp(MDApp):
             # add data to data entry(csv)
             # add data to food_list
             self.queue_delete_from_db(identifying_data)
-            data_entry = [food.get_date(), food.get_name(), food.get_cost(),
+            data_entry = [food.get_date(), food.get_name(), "{0:00.2f}".format(float(food.get_cost())),
                           food.get_calories(), food.get_carbs(), food.get_protein(), food.get_fat(),
                           food.get_sugar(), food.get_sodium()]
             self.add_new_data(data_entry)
@@ -1018,6 +1020,10 @@ class MyApp(MDApp):
         #check if entry statements are valid
 
     def check_date(self, date):
+        month = date[5:7]
+        day = date[8:10]
+        # check date is not past this year
+
         for count, element in enumerate(date):
             if len(date) != 10:
                 return False
@@ -1031,6 +1037,22 @@ class MyApp(MDApp):
                 if element != "-":
                     # print(count + " ERROR" + element)
                     return False
+
+        if int(date[0:4]) > int(self._today.year):
+            return False
+            # checks that date is not the 0 month
+        if month == '00':
+            return False
+            # checks that month does not go past 12
+        if int(month) > 12:
+            return False
+            # checks that it is no the 0th day
+        if day == '00':
+            return False
+            # checks that day does not go past 31
+        if int(day) > 31:
+            return False
+
         return True
 
     def queue_delete_from_db(self, identifying_data):
@@ -1051,8 +1073,9 @@ class MyApp(MDApp):
         history_list = []
         for num, item in enumerate(reversed(self._food_list)):
             history_list.append((
-                                num + 1, item.get_date(), item.get_name(), item.get_calories(), "$%s" % item.get_cost(),
-                                item.get_carbs(), item.get_protein(), item.get_fat(), item.get_sugar(),
+                                num + 1, item.get_date(), item.get_name(), item.get_calories(),
+                                "${0:00.2f}".format(float(item.get_cost())), item.get_carbs(),
+                                item.get_protein(), item.get_fat(), item.get_sugar(),
                                 item.get_sodium()))
 
         # this framework is limited and has bugs
@@ -1066,12 +1089,12 @@ class MyApp(MDApp):
                                            ("Date", dp(20)),
                                            ("Food", dp(25)),
                                            ("Calories", dp(20)),
-                                           ("Cost", dp(15)),
-                                           ("Carbs", dp(20)),
-                                           ("Protein", dp(20)),
-                                           ("Fat", dp(20)),
-                                           ("Sugar", dp(20)),
-                                           ("Sodium", dp(20))
+                                           ("Cost", dp(20)),
+                                           ("Carbs (g)", dp(20)),
+                                           ("Protein (g)", dp(20)),
+                                           ("Fat (g)", dp(20)),
+                                           ("Sugar (g)", dp(20)),
+                                           ("Sodium (g)", dp(20))
                                        ],
                                        row_data=history_list,
                                        )
