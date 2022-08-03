@@ -256,6 +256,8 @@ class MyApp(MDApp):
 
         self.create_datatable()
 
+        self.input_field.focus = False
+
         return self._screen_manager
 
     # this function dismisses any open popup windows
@@ -413,7 +415,7 @@ class MyApp(MDApp):
                             self._daily_spent += float(item.get_cost())
                             menu_text += (item.get_name() + ", ")
                         menu_text = menu_text[0:len(menu_text) - 2]
-                        self.infobox.text = menu_text + " ($" + self._curr_cost + ") added successfully!"
+                        self.infobox.text = menu_text + " (${0:00.2f}".format(float(self._curr_cost)) + ") added successfully!"
                         self.update_daily_disp()
                         self.create_datatable()
                     self._screen_manager.current = "main"
