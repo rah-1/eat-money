@@ -1,4 +1,5 @@
 Kivy
+KivyMD
 requests
 setuptools
 datetime

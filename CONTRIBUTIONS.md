@@ -24,4 +24,3 @@ cd /home/admin/resin
 
 ##this makes it executable
 eat-money
->>>>>>> Stashed changes
