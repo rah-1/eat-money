@@ -927,15 +927,15 @@ class MyApp(MDApp):
         if self.food.text == "":
             self.food.text = item.get_name()
             move_foward=False
+        if not self.check_valid_cost(self.cost.text, False):
+            move_foward = False
+            self.cost.text = str(item.get_cost())
+        if not self.check_date(self.date.text):
+            move_foward = False
+            self.date.text=item.get_date()
         elif self.cost.text == str(item.get_cost()).strip() and self.date.text == item.get_date().strip() and self.food.text == item.get_name().strip():
             self.change_status.text = "No new information entered!"
             move_foward = False
-        elif not self.check_valid_cost(self.cost.text, False):
-            move_foward = False
-            self.cost.text = str(item.get_cost())
-        elif not self.check_date(self.date.text):
-            move_foward = False
-            self.date.text=item.get_date()
         else:
             if self.food.text == item.get_name():
                 #("SAME ITEM")
@@ -947,8 +947,8 @@ class MyApp(MDApp):
                 food_list = find_food_data(self.food.text, self.date.text, self.cost.text)
 
                 if len(food_list) == 0:
-                    self.food.text = item.get_name()
                     self.change_status.text = " Unable to locate " + self.food.text + " in database!"
+                    self.food.text = item.get_name()
                     move_foward = False
                 elif len(food_list) > 1:
                     self.food.text = item.get_name()
