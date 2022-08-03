@@ -1,9 +1,6 @@
 from datetime import date
 import os
 
-from kivy.uix.anchorlayout import AnchorLayout
-from kivymd.uix.selection import MDSelectionList
-from kivymd.uix.toolbar import MDToolbar, MDBottomAppBar
 from kivy.uix.screenmanager import ScreenManager, Screen
 
 from eat_money.food import Food
@@ -13,33 +10,23 @@ from eat_money.text_helper import input_helper, list_helper, date_helper, food_h
 #TODO: will need to add kivymd in project requirements/packaging
 from kivymd.app import MDApp
 from kivy.lang import Builder
-from kivymd.uix.boxlayout import MDBoxLayout
-from kivymd.uix.floatlayout import MDFloatLayout
 from kivymd.uix.button import MDRaisedButton, MDFlatButton
 from kivymd.uix.button import MDRectangleFlatButton
-from kivymd.uix.label import Label
 from kivymd.uix.list import MDList, TwoLineAvatarListItem
-from kivymd.uix.list import IconLeftWidget
-from kivymd.uix.dialog import MDDialog
 from kivymd.uix.datatables import MDDataTable
 from kivy.metrics import dp
 
 
 from kivy.app import App
-from kivy.animation import Animation
 from kivy.utils import get_color_from_hex
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.image import Image
 from kivy.uix.label import Label
-from kivy.uix.textinput import TextInput
-from kivy.uix.button import Button
-from kivy.uix.widget import Widget
 from kivy.config import Config
 from kivy.uix.popup import Popup
 from kivy.core.window import Window
 from kivy.uix.scrollview import ScrollView
 from kivy.clock import Clock
-from kivy.app import runTouchApp
 
 
 import json
