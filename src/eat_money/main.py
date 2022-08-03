@@ -779,7 +779,6 @@ class MyApp(MDApp):
                 # icon = IconLeftWidget(icon="blank")
                 food_header = TwoLineAvatarListItem(
                     bg_color = bg,
-                    spacing = '1dp',
                     text_color = c,
                     theme_text_color='Custom',
                     secondary_theme_text_color = 'Custom',
