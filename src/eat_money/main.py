@@ -728,13 +728,13 @@ class MyApp(MDApp):
 
     def update_user_info(self, idk):
         move_forward = True
-        if not self.check_valid_cost(self.age_input_field.text, False):
+        if not (self.check_valid_cost(self.age_input_field.text, False) and float(self.age_input_field.text) > 0):
             move_forward = False
             self.age_input_field.text = ""
-        if not self.check_valid_cost(self.ht_input_field.text, False):
+        if not (self.check_valid_cost(self.ht_input_field.text, False) and float(self.ht_input_field.text) > 0):
             move_forward = False
             self.ht_input_field.text = ""
-        if not self.check_valid_cost(self.wt_input_field.text, False):
+        if not (self.check_valid_cost(self.wt_input_field.text, False) and float(self.wt_input_field.text) > 0):
             move_forward = False
             self.wt_input_field.text = ""
         if self.sex_input_field.text.lower() != 'm' and self.sex_input_field.text.lower() != 'f':
